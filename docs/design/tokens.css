@@ -1,0 +1,253 @@
+/*
+ * Design tokens for the Fleet Floor Simulator UI.
+ * Spec: docs/design/UI_SPEC.md. Copy or import this file into apps/web styles.
+ *
+ * Contents
+ *   1. Colors, light theme (default) and dark theme (prefers-color-scheme)
+ *   2. Spacing, radii, type, motion
+ *   3. Layout and cell sizing (the .floor-grid rule is the only component rule here)
+ *   4. Small utilities (.visually-hidden, focus ring)
+ *
+ * Contrast check (WCAG 2.x, computed with a script; all pairs below pass):
+ *   text/bg, text/surface, muted/surface: >= 4.5:1 in both themes (lowest: muted on surface-2, 6.5 light).
+ *   robot hue vs robot ink: >= 5.0:1 (light: white ink on dark fills, lowest R3 5.02;
+ *     dark: near-black ink on light fills, lowest 7.25). Robot hue vs cell: >= 5.0:1, so 3:1 UI rule holds.
+ *   outcome fg/bg pairs: >= 4.5:1 in both themes.
+ *   obstacle vs cell: 9.4:1 light, 5.8:1 dark. focus ring vs surface/cell: >= 3:1.
+ *   selected ring (ink) vs bg: 16:1+. border-strong vs surface/bg: >= 3:1.
+ * Robot hues are optional decoration: the robot ID text is always printed, never color alone.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- 1. Colors: light ------------------------------------------------ */
+  --color-bg: #f4f5f7;              /* page background */
+  --color-surface: #ffffff;         /* panels, toolbar, dialog */
+  --color-surface-2: #eceef2;       /* selected row, chips, hover */
+  --color-text: #1a2130;
+  --color-text-muted: #4a5568;
+  --color-border: #d3d8e0;          /* decorative dividers */
+  --color-border-strong: #6b7280;   /* control boundaries (>= 3:1) */
+
+  --color-accent: #1d4ed8;          /* primary button fill, links */
+  --color-accent-ink: #ffffff;      /* text on accent */
+  --color-focus: #1d4ed8;           /* keyboard focus ring */
+  --color-danger: #b91c1c;          /* delete button text/border */
+  --color-danger-ink: #ffffff;
+
+  /* Grid */
+  --color-cell: #ffffff;
+  --color-cell-line: #d5dae3;
+  --color-hover: #6b7280;           /* hover outline on a clickable cell */
+  --color-obstacle: #3f4756;        /* + diagonal hatch, see --obstacle-hatch */
+  --color-obstacle-stripe: #5b6475;
+  --color-selected: #111827;        /* selection ring: neutral ink, independent of robot hue */
+  --color-goto: #0f766e;            /* GOTO marker when no robot hue applies; markers normally use the robot's hue */
+  --color-edit: #b45309;            /* edit-mode border / switch */
+  --color-edit-bg: #fef3c7;         /* edit banner background */
+  --color-edit-ink: #78350f;        /* edit banner text */
+
+  /* Robot hues (index = (robotNumber - 1) % 8). Ink is the ID/arrow color on top of any hue. */
+  --robot-1: #1d4ed8;               /* blue */
+  --robot-2: #b91c1c;               /* red */
+  --robot-3: #15803d;               /* green */
+  --robot-4: #7e22ce;               /* purple */
+  --robot-5: #0e7490;               /* teal */
+  --robot-6: #be185d;               /* pink */
+  --robot-7: #9a3412;               /* rust */
+  --robot-8: #475569;               /* slate */
+  --robot-ink: #ffffff;
+
+  /* Last-tick outcomes: --outcome-X-fg on --outcome-X-bg, border in --outcome-X-line.
+     Each is always paired with a glyph and a text label (never color alone). */
+  --outcome-moved-fg: #14532d;       --outcome-moved-bg: #dcfce7;       --outcome-moved-line: #16a34a;
+  --outcome-turned-fg: #1e3a8a;      --outcome-turned-bg: #dbeafe;      --outcome-turned-line: #2563eb;
+  --outcome-blocked-fg: #7f1d1d;     --outcome-blocked-bg: #fee2e2;     --outcome-blocked-line: #dc2626;
+  --outcome-waiting-fg: #78350f;     --outcome-waiting-bg: #fef3c7;     --outcome-waiting-line: #d97706;
+  --outcome-idle-fg: #374151;        --outcome-idle-bg: #e5e7eb;        --outcome-idle-line: #9ca3af;
+  --outcome-unreachable-fg: #ffffff; --outcome-unreachable-bg: #991b1b; --outcome-unreachable-line: #7f1d1d;
+  --outcome-arrived-fg: #134e4a;     --outcome-arrived-bg: #ccfbf1;     --outcome-arrived-line: #0d9488;
+
+  /* Toasts reuse outcome pairs: error = blocked, info = turned. */
+  --toast-error-fg: var(--outcome-blocked-fg);
+  --toast-error-bg: var(--outcome-blocked-bg);
+  --toast-error-line: var(--outcome-blocked-line);
+  --toast-info-fg: var(--outcome-turned-fg);
+  --toast-info-bg: var(--outcome-turned-bg);
+  --toast-info-line: var(--outcome-turned-line);
+
+  /* Connection badge (always a dot AND a word) */
+  --conn-connected: #15803d;
+  --conn-reconnecting: #b45309;
+  --conn-disconnected: #b91c1c;
+
+  /* Diagonal hatch for obstacles: the non-color signal */
+  --obstacle-hatch: repeating-linear-gradient(
+    45deg,
+    var(--color-obstacle) 0 5px,
+    var(--color-obstacle-stripe) 5px 8px
+  );
+
+  --shadow-1: 0 1px 2px rgb(16 24 40 / 0.12), 0 1px 3px rgb(16 24 40 / 0.1);
+  --shadow-2: 0 6px 20px rgb(16 24 40 / 0.2);
+
+  /* ---- 2. Spacing, radii, type, motion --------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --radius-1: 4px;                  /* cells' robot token, chips */
+  --radius-2: 8px;                  /* panels, buttons, dialog */
+  --radius-pill: 999px;             /* badges, connection pill */
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --text-xs: 0.75rem;               /* 12px: badges, axis max */
+  --text-sm: 0.875rem;              /* 14px: history lines, chips */
+  --text-md: 1rem;                  /* 16px: body, buttons (avoids iOS zoom on inputs) */
+  --text-lg: 1.25rem;               /* 20px: panel headings */
+  --leading: 1.4;
+
+  --control-height: 44px;           /* touch target for buttons, slider */
+  --focus-ring: 3px solid var(--color-focus);
+  --motion-fast: 120ms;
+
+  /* ---- 3. Layout and cell sizing --------------------------------------- */
+  --breakpoint-desktop: 900px;      /* documentation only: custom properties can't be used in @media */
+  --sidebar-w: 360px;
+  --axis-size: 24px;                /* width of y labels / height of x labels */
+  --cell-min: 12px;                 /* 20 columns still fit a 320px screen without page scroll */
+  --cell-max: 56px;                 /* 10x8 on a big monitor */
+
+  /* Space the grid cannot use. Mobile default: page gutters (2 x 16) + y axis.
+     Vertical limit only matters on desktop, so mobile uses a small value. */
+  --grid-chrome-x: calc(2 * var(--space-4) + var(--axis-size));
+  --grid-chrome-y: 120px;
+}
+
+/* Desktop: sidebar + gap + page padding + y axis; header + toolbar + status line + x axis + padding. */
+@media (min-width: 900px) {
+  :root {
+    --grid-chrome-x: calc(var(--sidebar-w) + var(--space-5) + 2 * var(--space-4) + var(--axis-size));
+    --grid-chrome-y: 196px;
+  }
+}
+
+/*
+ * The grid element sets --cols and --rows inline (from state.width / state.height), e.g.
+ *   <div class="floor-grid" style="--cols: 10; --rows: 8">
+ * It must be defined here, on the grid element, because var() is resolved where a custom property is declared:
+ * a --cell-size set on :root could not see the grid's --cols/--rows.
+ * Result: the largest square cell that fits both the available width and height, within [min, max].
+ * Checks: 10x8 at 375px wide -> (375-56)/10 = ~32px. 20x20 at 375px -> ~16px.
+ *         20x20 at 1366x650 viewport -> (650-196)/20 = ~22px. 20x20 at 320px -> 13px (min 12).
+ */
+.floor-grid {
+  --cell-size: clamp(
+    var(--cell-min),
+    min(
+      calc((100vw - var(--grid-chrome-x)) / var(--cols, 10)),
+      calc((100dvh - var(--grid-chrome-y)) / var(--rows, 8))
+    ),
+    var(--cell-max)
+  );
+}
+
+/* ---- Dark theme --------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0e1218;
+    --color-surface: #171d26;
+    --color-surface-2: #212a36;
+    --color-text: #e8ecf3;
+    --color-text-muted: #a8b2c2;
+    --color-border: #2b3544;
+    --color-border-strong: #8a96a8;
+
+    --color-accent: #7aa7ff;
+    --color-accent-ink: #0b1220;
+    --color-focus: #8db5ff;
+    --color-danger: #ff8a8a;
+    --color-danger-ink: #1a0a0a;
+
+    --color-cell: #131a22;
+    --color-cell-line: #2a3441;
+    --color-hover: #8a96a8;
+    --color-obstacle: #8a95a8;
+    --color-obstacle-stripe: #626d80;
+    --color-selected: #ffffff;
+    --color-goto: #2dd4bf;
+    --color-edit: #f0b44a;
+    --color-edit-bg: #3a2a0c;
+    --color-edit-ink: #fde8b0;
+
+    --robot-1: #6ea0ff;
+    --robot-2: #ff8a80;
+    --robot-3: #4ade80;
+    --robot-4: #c4a1ff;
+    --robot-5: #2dd4bf;
+    --robot-6: #ff8fc0;
+    --robot-7: #fb923c;
+    --robot-8: #a3b1c6;
+    --robot-ink: #0b1220;
+
+    --outcome-moved-fg: #bbf7d0;       --outcome-moved-bg: #14532d;       --outcome-moved-line: #4ade80;
+    --outcome-turned-fg: #bfdbfe;      --outcome-turned-bg: #1e3a8a;      --outcome-turned-line: #60a5fa;
+    --outcome-blocked-fg: #fecaca;     --outcome-blocked-bg: #7f1d1d;     --outcome-blocked-line: #f87171;
+    --outcome-waiting-fg: #fde68a;     --outcome-waiting-bg: #78350f;     --outcome-waiting-line: #fbbf24;
+    --outcome-idle-fg: #d1d5db;        --outcome-idle-bg: #374151;        --outcome-idle-line: #6b7280;
+    --outcome-unreachable-fg: #ffffff; --outcome-unreachable-bg: #b91c1c; --outcome-unreachable-line: #fca5a5;
+    --outcome-arrived-fg: #99f6e4;     --outcome-arrived-bg: #134e4a;     --outcome-arrived-line: #2dd4bf;
+
+    --conn-connected: #4ade80;
+    --conn-reconnecting: #fbbf24;
+    --conn-disconnected: #ff8a8a;
+
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.5);
+    --shadow-2: 0 6px 20px rgb(0 0 0 / 0.55);
+  }
+}
+
+/* ---- 4. Utilities ------------------------------------------------------- */
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-md);
+  line-height: var(--leading);
+}
+
+/* Never remove an outline without replacing it. Apply to buttons, inputs, summary and cells. */
+:where(button, input, select, summary, [tabindex]):focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+/* Grid cells draw their focus ring inset so it never collides with the outer selection ring. */
+.floor-grid [role="gridcell"]:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: -3px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+  }
+}
