@@ -1,0 +1,11 @@
+# Contest at (1,1): R2 (west) and R3 (south) both aim at it, R2 wins.
+# R2 may enter because R1, which stands on (1,1), moves out in the same tick. R3 stays.
+FLOOR 5,5
+PLACE R1 1,1,EAST
+PLACE R2 0,1,EAST
+PLACE R3 1,0,NORTH
+QUEUE R1 MOVE
+QUEUE R2 MOVE
+QUEUE R3 MOVE
+TICK
+REPORT

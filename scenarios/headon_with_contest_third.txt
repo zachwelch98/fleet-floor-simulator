@@ -1,0 +1,11 @@
+# R2 and R3 would swap; R1 aims at R3's cell from the north and, being lowest, wins that contest (R2 loses it).
+# No swap forms, and nothing moves.
+FLOOR 5,5
+PLACE R1 1,1,SOUTH
+PLACE R2 0,0,EAST
+PLACE R3 1,0,WEST
+QUEUE R1 MOVE
+QUEUE R2 MOVE
+QUEUE R3 MOVE
+TICK
+REPORT

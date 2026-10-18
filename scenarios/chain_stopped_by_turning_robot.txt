@@ -1,0 +1,10 @@
+# R2 turns LEFT on the spot, so it still occupies (1,0): R1 behind it is blocked. R3 ahead of it moves freely.
+FLOOR 5,5
+PLACE R1 0,0,EAST
+PLACE R2 1,0,EAST
+PLACE R3 2,0,EAST
+QUEUE R1 MOVE
+QUEUE R2 LEFT
+QUEUE R3 MOVE
+TICK
+REPORT

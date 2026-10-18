@@ -1,0 +1,16 @@
+# A 4-loop (R2..R5) with a LOWER-numbered outsider R1 aiming at one loop cell, (1,0), the same cell R4 aims at.
+# R1 wins the contest, the loop cannot complete, and R1 itself cannot enter (R5 is stuck). Everyone is blocked,
+# and R4 does not get a retry (DECISIONS 2.2).
+FLOOR 5,5
+PLACE R1 2,0,WEST
+PLACE R2 0,0,NORTH
+PLACE R3 0,1,EAST
+PLACE R4 1,1,SOUTH
+PLACE R5 1,0,WEST
+QUEUE R1 MOVE
+QUEUE R2 MOVE
+QUEUE R3 MOVE
+QUEUE R4 MOVE
+QUEUE R5 MOVE
+TICK
+REPORT

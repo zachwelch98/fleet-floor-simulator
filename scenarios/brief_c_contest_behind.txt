@@ -1,0 +1,10 @@
+# Brief example c: R1 and R2 both aim at (1,1); R1 (lowest number) wins.
+# R2 is blocked, and R3, which follows R2, is blocked behind it.
+PLACE R1 0,1,EAST
+PLACE R2 2,1,WEST
+PLACE R3 3,1,WEST
+QUEUE R1 MOVE
+QUEUE R2 MOVE
+QUEUE R3 MOVE
+TICK
+REPORT

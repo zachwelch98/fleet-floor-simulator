@@ -1,0 +1,21 @@
+# FLOOR with a size outside 1..20 (or malformed) is ignored and the existing floor is kept. FLOOR 20,20 and 1,1 are valid.
+# After the ignored lines the floor is still 3x3, so PLACE R2 4,4 is off the floor.
+FLOOR 3,3
+PLACE R1 2,2,NORTH
+FLOOR 21,3
+FLOOR 3,21
+FLOOR 0,5
+FLOOR 5,0
+FLOOR -1,3
+FLOOR 3.5,3
+FLOOR 3
+FLOOR 100,100
+REPORT
+PLACE R2 4,4,NORTH
+REPORT
+FLOOR 20,20
+PLACE R2 19,19,SOUTH
+REPORT
+FLOOR 1,1
+PLACE R3 0,0,EAST
+REPORT

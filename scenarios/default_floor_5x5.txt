@@ -1,0 +1,7 @@
+# No FLOOR line: the default 5x5 floor. (4,4) is the far corner; (5,0) and (0,5) are off the floor, so those PLACEs are ignored.
+PLACE R1 4,4,NORTH
+PLACE R2 5,0,EAST
+PLACE R3 0,5,EAST
+QUEUE R1 MOVE RIGHT MOVE
+TICK 3
+REPORT

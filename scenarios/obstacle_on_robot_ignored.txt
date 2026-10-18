@@ -1,0 +1,8 @@
+# OBSTACLE on a robot's cell is ignored. After R1 leaves (1,1), another robot can be placed there, proving no obstacle was created.
+FLOOR 5,5
+PLACE R1 1,1,NORTH
+OBSTACLE 1,1
+QUEUE R1 MOVE
+TICK
+PLACE R2 1,1,EAST
+REPORT

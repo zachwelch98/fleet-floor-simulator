@@ -1,0 +1,11 @@
+# Commands and facings are case-insensitive; leading/trailing/repeated spaces and spaces around commas are tolerated.
+# R1 and R2 face each other and both MOVE (head-on, blocked), then R1 turns RIGHT.
+floor 4,4
+   place r1 0, 0 ,east
+PLACE   R2   1,0,   WEST
+Queue r1 move  right
+QUEUE R2 Move
+tick   
+report
+Tick 1
+report  

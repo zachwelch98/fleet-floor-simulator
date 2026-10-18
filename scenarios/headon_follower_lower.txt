@@ -1,0 +1,11 @@
+# Head-on pair R2/R3 with a LOWER-numbered robot R1 behind R3. R1 and R2 both aim at (1,0) and R1 wins it,
+# so the swap never forms. Nobody can move anyway.
+FLOOR 5,5
+PLACE R2 0,0,EAST
+PLACE R3 1,0,WEST
+PLACE R1 2,0,WEST
+QUEUE R1 MOVE
+QUEUE R2 MOVE
+QUEUE R3 MOVE
+TICK
+REPORT

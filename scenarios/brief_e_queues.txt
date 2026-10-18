@@ -1,0 +1,12 @@
+# Brief example e: different queue lengths run in lockstep, a blocked MOVE is used up.
+# After 3 ticks: R1 MOVE (2,2), LEFT -> SOUTH, idle; R2 MOVE (0,1), RIGHT -> EAST, MOVE (1,1).
+# 10 more ticks: R2 moves to (2,1), (3,1), then the east wall blocks the last MOVE.
+FLOOR 4,3
+PLACE R2 0,0,NORTH
+PLACE R1 3,2,WEST
+QUEUE R2 MOVE RIGHT MOVE MOVE MOVE MOVE
+QUEUE R1 MOVE LEFT
+TICK 3
+REPORT
+TICK 10
+REPORT

@@ -1,0 +1,10 @@
+# R01 is R1 (leading zeros normalised, case-insensitive): PLACE R01 then PLACE r001 move the same robot.
+# R010 is R10.
+FLOOR 5,5
+PLACE R01 0,0,EAST
+PLACE r001 2,2,NORTH
+QUEUE R01 MOVE
+PLACE R010 4,4,SOUTH
+QUEUE r10 MOVE
+TICK
+REPORT

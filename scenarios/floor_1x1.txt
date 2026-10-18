@@ -1,0 +1,9 @@
+# A 1x1 floor: every MOVE hits a wall and turning always works. PLACE onto the occupied cell and OBSTACLE on the robot are ignored.
+# Commands: MOVE(blocked) RIGHT MOVE(blocked) LEFT MOVE(blocked) -> facing NORTH again.
+FLOOR 1,1
+PLACE R1 0,0,NORTH
+PLACE R2 0,0,EAST
+OBSTACLE 0,0
+QUEUE R1 MOVE RIGHT MOVE LEFT MOVE
+TICK 5
+REPORT

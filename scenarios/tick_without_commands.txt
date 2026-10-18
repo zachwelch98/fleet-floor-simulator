@@ -1,0 +1,8 @@
+# TICK with nothing queued changes nothing (and works on an empty floor, too).
+FLOOR 3,3
+TICK 2
+REPORT
+PLACE R2 0,0,EAST
+PLACE R1 1,1,NORTH
+TICK 5
+REPORT

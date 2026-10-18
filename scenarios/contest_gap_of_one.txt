@@ -1,0 +1,9 @@
+# Two robots facing each other with ONE empty cell between them is a contest, not a head-on swap.
+# R1 (lower) wins the middle cell; R2 stays.
+FLOOR 5,5
+PLACE R2 2,0,WEST
+PLACE R1 0,0,EAST
+QUEUE R1 MOVE
+QUEUE R2 MOVE
+TICK
+REPORT

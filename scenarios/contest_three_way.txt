@@ -1,0 +1,10 @@
+# Three robots aim at (2,2) from three sides. The lowest number (R3) wins; R4 and R5 are blocked.
+FLOOR 5,5
+PLACE R5 2,1,NORTH
+PLACE R3 1,2,EAST
+PLACE R4 3,2,WEST
+QUEUE R3 MOVE
+QUEUE R4 MOVE
+QUEUE R5 MOVE
+TICK
+REPORT

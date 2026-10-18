@@ -1,0 +1,11 @@
+# R3 has no commands, so it blocks R2 and R1 behind it, while R4 in front of it moves away.
+FLOOR 5,5
+PLACE R1 0,0,EAST
+PLACE R2 1,0,EAST
+PLACE R3 2,0,EAST
+PLACE R4 3,0,EAST
+QUEUE R1 MOVE
+QUEUE R2 MOVE
+QUEUE R4 MOVE
+TICK
+REPORT

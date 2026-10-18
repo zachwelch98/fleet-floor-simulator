@@ -1,0 +1,8 @@
+# REPORT with no robots prints EMPTY: before anything is placed (default floor), after FLOOR, and after FLOOR resets a populated world.
+REPORT
+FLOOR 3,3
+REPORT
+PLACE R1 0,0,EAST
+REPORT
+FLOOR 3,3
+REPORT

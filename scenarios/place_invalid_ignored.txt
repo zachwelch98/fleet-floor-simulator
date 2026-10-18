@@ -1,0 +1,20 @@
+# Invalid PLACE lines are ignored without disturbing anything: occupied cell, obstacle cell, off the floor,
+# negative or fractional coordinates, short or unknown facing, missing facing, bad robot IDs, non-numeric coordinates.
+FLOOR 4,4
+OBSTACLE 3,3
+PLACE R1 1,1,NORTH
+PLACE R2 1,1,EAST
+PLACE R2 3,3,EAST
+PLACE R2 4,0,EAST
+PLACE R2 0,4,EAST
+PLACE R2 -1,0,EAST
+PLACE R2 1.5,0,EAST
+PLACE R2 0,0,N
+PLACE R2 0,0,UP
+PLACE R2 0,0
+PLACE X2 0,0,EAST
+PLACE R0 0,0,EAST
+PLACE R2 a,b,EAST
+REPORT
+PLACE R2 0,0,EAST
+REPORT

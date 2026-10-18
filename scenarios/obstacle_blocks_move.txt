@@ -1,0 +1,9 @@
+# R1 is blocked by an obstacle ahead; R2 behind it is blocked as well.
+FLOOR 5,5
+OBSTACLE 2,0
+PLACE R1 1,0,EAST
+PLACE R2 0,0,EAST
+QUEUE R1 MOVE
+QUEUE R2 MOVE
+TICK
+REPORT

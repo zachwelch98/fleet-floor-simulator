@@ -1,0 +1,14 @@
+# A FLOOR line in the middle of a file creates a fresh empty floor: robots, obstacles and queues are gone.
+# The obstacle at (1,0) from the first floor must not survive into the second.
+FLOOR 3,3
+OBSTACLE 1,0
+PLACE R1 0,1,NORTH
+QUEUE R1 MOVE
+FLOOR 4,4
+REPORT
+PLACE R1 0,0,EAST
+TICK
+REPORT
+QUEUE R1 MOVE MOVE
+TICK 2
+REPORT

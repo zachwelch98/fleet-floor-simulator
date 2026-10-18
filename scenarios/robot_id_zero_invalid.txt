@@ -1,0 +1,10 @@
+# There is no robot R0 (or R00): PLACE and QUEUE with those IDs are ignored; only R1 exists.
+FLOOR 5,5
+PLACE R0 1,1,NORTH
+PLACE R00 1,1,NORTH
+PLACE R1 0,0,EAST
+QUEUE R0 MOVE
+QUEUE R00 MOVE
+QUEUE R1 MOVE
+TICK
+REPORT
