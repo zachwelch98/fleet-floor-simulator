@@ -164,6 +164,17 @@ exactly what the brief specifies, and it guarantees GOTO never deadlocks forever
 "traffic-aware" planner (treat robots as passable at a cost, or plan through cells being
 vacated) is listed under future work in the README.
 
+### 3.10 Consequences found while testing GOTO
+- **A GOTO step can only ever be blocked as `CONTESTED`.** Its target cell is, by construction,
+  empty and walkable at planning time, so WALL, OBSTACLE, OCCUPIED, HEAD_ON and BEHIND_BLOCKED
+  can't happen to it. The only way to lose the step is another robot claiming the same cell
+  with a lower number. For the same reason a GOTO robot can never be part of a rotation loop.
+- GOTO tick results carry the GOTO command itself in `command`. `ARRIVED` (already on target)
+  has no `reachedGoto` flag; `WAITING`, `UNREACHABLE` and `ARRIVED` leave `to == from` and the
+  facing unchanged.
+- Creating the default floor at first boot goes through `CREATE_FLOOR` like any other action, so
+  history starts with a `FLOOR_CREATED` entry at version 1.
+
 ## 4. Scenario runner
 
 ### 4.1 FLOOR resets the world **[gap]**

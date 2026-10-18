@@ -44,4 +44,16 @@ and why.
   agents' worktrees under `.claude/worktrees/`; they now ignore it. Prettier was not enforced
   (an agent noticed); it is now part of `verify`.
 
+### Phase 2: GOTO and the API (written by Claude as PM; to be reviewed)
+- **Independent agreement as evidence.** The GOTO tests (61) and GOTO scenarios (21) were written
+  without access to the GOTO implementation, and vice versa. All passed against each other on the
+  first merge. Both agents were working from DECISIONS section 3, so this confirms the code matches
+  the written decisions, not that the decisions match the brief.
+- **Gap between agents, closed by the PM.** The API agent couldn't exercise GOTO through HTTP,
+  because GOTO wasn't merged in its worktree. After both merged, Claude ran the built server and
+  checked a GOTO detour, a 409 rejection and restart persistence end to end.
+- **Accepted, with a decision recorded:** the GOTO agent pointed out that, read literally, the
+  brief makes a GOTO robot give up behind another robot in a one-wide corridor (DECISIONS 3.9).
+  It was kept, because it is literal and can't deadlock, and listed as future work.
+
 <!-- Entries added per phase: what was asked, accepted, rejected/rewritten, and why. -->
