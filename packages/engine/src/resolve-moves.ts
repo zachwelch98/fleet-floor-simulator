@@ -41,8 +41,7 @@ export interface MoveRequest {
 }
 
 export type MoveResolution =
-  | { readonly outcome: 'MOVED' }
-  | { readonly outcome: 'BLOCKED'; readonly reason: BlockReason };
+  { readonly outcome: 'MOVED' } | { readonly outcome: 'BLOCKED'; readonly reason: BlockReason };
 
 /** One entry per intent, keyed by robot number. */
 export type MoveResolutions = ReadonlyMap<number, MoveResolution>;
@@ -74,7 +73,10 @@ function sortedByNum(intents: readonly MoveIntent[]): MoveIntent[] {
 // ---------------------------------------------------------------------------
 
 /** Blocks every intent that aims off the floor (WALL) or into an obstacle (OBSTACLE). */
-function blockWallsAndObstacles(request: MoveRequest, intents: readonly MoveIntent[]): Map<number, MoveResolution> {
+function blockWallsAndObstacles(
+  request: MoveRequest,
+  intents: readonly MoveIntent[],
+): Map<number, MoveResolution> {
   const blockedEarly = new Map<number, MoveResolution>();
   for (const intent of intents) {
     if (!isOnFloor(request, intent.target)) {
