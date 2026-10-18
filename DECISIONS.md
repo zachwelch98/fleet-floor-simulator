@@ -137,6 +137,10 @@ should keep trying.
 ### 3.5 Counter reset on PLACE
 Re-placing a robot resets its GOTO no-path counter (its surroundings changed). Its queue is kept.
 
+### 3.5b CLEAR_QUEUE resets the GOTO counter
+Clearing a queue (or a GOTO finishing by arrival or UNREACHABLE) resets `gotoNoPathTicks` to 0,
+so a later GOTO always starts with a fresh 3-tick budget.
+
 ### 3.6 Facing during GOTO
 Turning to face the step is free and sticks even if the MOVE is then blocked. On WAITING
 (no path) the facing is unchanged.
@@ -235,12 +239,17 @@ default, with a toggle to show them.
 
 ### 6.1 Storage layout
 SQLite via better-sqlite3 (synchronous). Per committed action, in one transaction:
-- normalized current state: `floors`, `obstacles`, `robots`, `queue_items` (authoritative);
-- `floor_snapshots`: the engine state as JSON at that version;
-- `events`: the history log.
-*Why:* normalized tables are queryable and conventional; the snapshot gives fast loading and a
-base for a future timeline (Module C); the event log is the required history. A test checks
-that all three rebuild to the same state so they cannot drift.
+- **normalized current state** (authoritative): `floors`, `obstacles`, `robots`, `queue_items`;
+- **`floor_snapshots`**: the engine state as JSON. Only the *latest* snapshot per floor is kept
+  (upserted). Keeping one per version would grow by ~36k rows/hour at the fastest Play speed;
+  periodic snapshots would be the base for a future timeline (Module C);
+- **`actions`**: every accepted action (the input), keyed by floor and version;
+- **`events`**: the history log (the output) shown in the UI.
+*Why:* normalized tables are queryable and conventional; the snapshot gives fast loading;
+storing the *actions* makes the history replayable. Folding `apply` over the actions from an
+empty world must reproduce the current state exactly. A test checks that tables, snapshot and
+replay are deep-equal, so the three can never drift apart.
+Rejected actions are not stored (they changed nothing); the rejected client is told why.
 
 ### 6.2 Play state is not persisted **[gap]**
 After a server restart every floor comes back paused. *Why:* play/pause is a session control,

@@ -14,7 +14,7 @@
   "scripts": {
     "scenario": "tsx packages/engine/src/cli/scenario.ts",
     "build": "npm run build --workspaces --if-present",
-    "typecheck": "npm run build -w @fleet/engine && npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run build -w @fleet/engine -w @fleet/protocol && npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "npm run test --workspaces --if-present",
