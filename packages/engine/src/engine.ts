@@ -308,7 +308,8 @@ function clearQueue(state: FloorState, rawId: string): ApplyResult {
   if ('rejection' in found) {
     return found.rejection;
   }
-  const updated: Robot = { ...found.robot, queue: [] };
+  // A later GOTO must start with a fresh no-path budget (DECISIONS 3.5b).
+  const updated: Robot = { ...found.robot, queue: [], gotoNoPathTicks: 0 };
   return accept(replaceRobot(state, updated), [{ type: 'QUEUE_CLEARED', id: found.robot.id }]);
 }
 
