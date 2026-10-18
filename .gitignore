@@ -14,3 +14,4 @@ playwright-report/
 .claude/context-map.json
 .claude/context-map.md
 Fleet_Floor_Simulator_Brief.pdf
+.claude/worktrees/
