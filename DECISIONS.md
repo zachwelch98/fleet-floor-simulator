@@ -41,8 +41,8 @@ specific rule, so it wins for GOTO.
      blocked in steps 3–4) → `BLOCKED(OCCUPIED)` / `BLOCKED(BEHIND_BLOCKED)`;
    - target holds a mover → same fate as that mover (if it is blocked, this one is
      `BLOCKED(BEHIND_BLOCKED)`);
-   - the chain closes into a loop: a loop of 2 is a head-on swap → both `BLOCKED(HEAD_ON)`
-     (and anyone behind them `BEHIND_BLOCKED`); a loop of 3 or more → all MOVED.
+   - the chain closes into a loop: a loop of 2 is a head-on swap → both `BLOCKED(HEAD_ON)`;
+     a loop of 3 or more → all MOVED.
 6. Positions are applied together, the tick counter increments, and one result per robot is
    recorded.
 
@@ -79,7 +79,17 @@ floor still counts as a tick).
 A robot that turns doesn't leave its cell, so a robot following it is blocked
 (`OCCUPIED`). This follows from rule 4.
 
-### 2.7 Robot ID priority
+### 2.7 Consequences of grid geometry (found while implementing)
+- **The smallest possible rotation is 4 robots.** A grid is bipartite, so every closed loop of
+  moves has even length. The brief's "three or more" can only ever mean 4, 6, 8, …
+- **A robot directly behind a head-on pair is reported `CONTESTED`, not `BEHIND_BLOCKED`.** It
+  always aims at the same cell as the pair member facing it, so the contest step blocks one of
+  them first. If the follower has the lower number it wins the contest and the swap never
+  forms. `BEHIND_BLOCKED` shows up one robot further back.
+- **No chain can lead into a loop.** Each loop cell already has its single incoming mover from
+  inside the loop, so an outside robot aiming at it would have lost a contest.
+
+### 2.8 Robot ID priority
 Robot priority compares the integer after "R" (R2 beats R10), as the brief says.
 
 ---

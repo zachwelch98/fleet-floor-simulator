@@ -1,24 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
-
-// Dev 1 implements parseRobotNum in parallel. Use the real one when it exists; until then
-// fall back to a reference implementation of its documented contract so these tests run.
-vi.mock('../../src/geometry.js', async (importActual) => {
-  const actual = await importActual<typeof import('../../src/geometry.js')>();
-  return {
-    ...actual,
-    parseRobotNum: (raw: string): number | null => {
-      try {
-        return actual.parseRobotNum(raw);
-      } catch {
-        const m = /^R(\d+)$/i.exec(raw);
-        if (!m) return null;
-        const n = Number(m[1]);
-        return n >= 1 ? n : null;
-      }
-    },
-  };
-});
-
+import { describe, expect, it } from 'vitest';
 import { parseScenarioLine } from '../../src/scenario/parse.js';
 import type { Action } from '../../src/types.js';
 
