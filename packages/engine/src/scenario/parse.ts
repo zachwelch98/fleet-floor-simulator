@@ -60,7 +60,10 @@ export function parseScenarioLine(line: string): ScenarioLine {
   if (text === '' || text.startsWith('#')) return { kind: 'skip' };
 
   // Tolerate spaces around commas, then split on runs of whitespace.
-  const tokens = text.toUpperCase().replace(/\s*,\s*/g, ',').split(/\s+/);
+  const tokens = text
+    .toUpperCase()
+    .replace(/\s*,\s*/g, ',')
+    .split(/\s+/);
   const keyword = tokens[0];
   const args = tokens.slice(1);
 
@@ -75,7 +78,10 @@ export function parseScenarioLine(line: string): ScenarioLine {
       if (args.length !== 1) return invalid('OBSTACLE expects X,Y');
       const cell = parsePair(args[0] ?? '');
       if (!cell) return invalid('OBSTACLE coordinates must be two integers');
-      return { kind: 'action', action: { type: 'SET_OBSTACLE', x: cell.x, y: cell.y, present: true } };
+      return {
+        kind: 'action',
+        action: { type: 'SET_OBSTACLE', x: cell.x, y: cell.y, present: true },
+      };
     }
     case 'PLACE': {
       if (args.length !== 2) return invalid('PLACE expects Rn X,Y,FACING');

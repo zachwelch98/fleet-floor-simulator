@@ -84,7 +84,12 @@ export type Action =
     }
   | { readonly type: 'REMOVE_ROBOT'; readonly id: RobotId }
   /** Scenario OBSTACLE uses present: true. Setting an existing state is a successful no-op. */
-  | { readonly type: 'SET_OBSTACLE'; readonly x: number; readonly y: number; readonly present: boolean }
+  | {
+      readonly type: 'SET_OBSTACLE';
+      readonly x: number;
+      readonly y: number;
+      readonly present: boolean;
+    }
   /** UI edit-mode click. */
   | { readonly type: 'TOGGLE_OBSTACLE'; readonly x: number; readonly y: number }
   /** Append one or more commands. Atomic: if any command is invalid, nothing is queued. */
@@ -153,11 +158,24 @@ export type WorldEvent =
       readonly replaced: boolean;
     }
   | { readonly type: 'ROBOT_REMOVED'; readonly id: RobotId }
-  | { readonly type: 'OBSTACLE_SET'; readonly x: number; readonly y: number; readonly present: boolean }
-  | { readonly type: 'COMMANDS_QUEUED'; readonly id: RobotId; readonly commands: readonly Command[] }
+  | {
+      readonly type: 'OBSTACLE_SET';
+      readonly x: number;
+      readonly y: number;
+      readonly present: boolean;
+    }
+  | {
+      readonly type: 'COMMANDS_QUEUED';
+      readonly id: RobotId;
+      readonly commands: readonly Command[];
+    }
   | { readonly type: 'QUEUE_CLEARED'; readonly id: RobotId }
   /** One per tick. `results` has exactly one entry per robot, sorted by robot number. */
-  | { readonly type: 'TICK_RESOLVED'; readonly tick: number; readonly results: readonly RobotTickResult[] };
+  | {
+      readonly type: 'TICK_RESOLVED';
+      readonly tick: number;
+      readonly results: readonly RobotTickResult[];
+    };
 
 export type ApplyResult =
   | { readonly ok: true; readonly state: FloorState; readonly events: readonly WorldEvent[] }

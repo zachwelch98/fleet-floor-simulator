@@ -22,7 +22,11 @@ vi.mock('../../src/geometry.js', async (importActual) => {
 
 vi.mock('../../src/engine.js', async (importActual) => {
   const actual = await importActual<typeof import('../../src/engine.js')>();
-  const reject = (message: string): ApplyResult => ({ ok: false, reason: 'OUT_OF_BOUNDS', message });
+  const reject = (message: string): ApplyResult => ({
+    ok: false,
+    reason: 'OUT_OF_BOUNDS',
+    message,
+  });
   return {
     ...actual,
     apply: (state: FloorState, action: Action): ApplyResult => {
@@ -32,7 +36,11 @@ vi.mock('../../src/engine.js', async (importActual) => {
           if (action.width < 1 || action.width > 20 || action.height < 1 || action.height > 20) {
             return reject('size');
           }
-          return { ok: true, state: actual.createFloorState(action.width, action.height), events: [] };
+          return {
+            ok: true,
+            state: actual.createFloorState(action.width, action.height),
+            events: [],
+          };
         case 'PLACE_ROBOT': {
           if (action.x < 0 || action.y < 0 || action.x >= state.width || action.y >= state.height) {
             return reject('bounds');
@@ -40,7 +48,15 @@ vi.mock('../../src/engine.js', async (importActual) => {
           const id = action.id ?? `R${state.nextRobotNum}`;
           const num = Number(id.slice(1));
           const others = state.robots.filter((r) => r.id !== id);
-          const robot = { id, num, x: action.x, y: action.y, facing: action.facing, queue: [], gotoNoPathTicks: 0 };
+          const robot = {
+            id,
+            num,
+            x: action.x,
+            y: action.y,
+            facing: action.facing,
+            queue: [],
+            gotoNoPathTicks: 0,
+          };
           // Deliberately insert unsorted to prove runScenario sorts REPORT output itself.
           return { ok: true, state: { ...state, robots: [...others, robot] }, events: [] };
         }
@@ -81,7 +97,15 @@ describe('runScenario (fake apply)', () => {
   });
 
   it('ignores rejected, invalid, blank and comment lines and keeps going', () => {
-    const text = ['# header', '', 'PLACE R1 9,9,NORTH', 'PLACE R1 oops', 'WHAT', 'PLACE R2 1,1,SOUTH', 'REPORT'].join('\n');
+    const text = [
+      '# header',
+      '',
+      'PLACE R1 9,9,NORTH',
+      'PLACE R1 oops',
+      'WHAT',
+      'PLACE R2 1,1,SOUTH',
+      'REPORT',
+    ].join('\n');
     expect(runScenario(text)).toEqual(['R2 1,1,SOUTH']);
   });
 
@@ -129,7 +153,8 @@ describe('runScenario (fake apply)', () => {
   });
 
   it('is deterministic: the same text gives the same output', () => {
-    const text = 'FLOOR 4,3\nPLACE R2 0,0,NORTH\nPLACE R1 3,2,WEST\nTICK 3\nREPORT\nTICK 10\nREPORT';
+    const text =
+      'FLOOR 4,3\nPLACE R2 0,0,NORTH\nPLACE R1 3,2,WEST\nTICK 3\nREPORT\nTICK 10\nREPORT';
     expect(runScenario(text)).toEqual(runScenario(text));
   });
 });

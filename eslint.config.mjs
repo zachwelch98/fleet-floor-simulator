@@ -24,9 +24,18 @@ export default tseslint.config(
         'error',
         {
           patterns: [
-            { group: ['node:*', 'fs', 'path', 'child_process', 'os'], message: 'Engine must be pure (no IO).' },
-            { group: ['@nestjs/*', '@angular/*', 'better-sqlite3', 'socket.io*'], message: 'Engine must not depend on frameworks.' },
-            { group: ['@fleet/protocol', '**/apps/**'], message: 'Engine must not depend on outer layers.' },
+            {
+              group: ['node:*', 'fs', 'path', 'child_process', 'os'],
+              message: 'Engine must be pure (no IO).',
+            },
+            {
+              group: ['@nestjs/*', '@angular/*', 'better-sqlite3', 'socket.io*'],
+              message: 'Engine must not depend on frameworks.',
+            },
+            {
+              group: ['@fleet/protocol', '**/apps/**'],
+              message: 'Engine must not depend on outer layers.',
+            },
           ],
         },
       ],

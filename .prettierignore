@@ -1,0 +1,8 @@
+.claude/
+node_modules/
+dist/
+.angular/
+coverage/
+package-lock.json
+*.md
+scenarios/

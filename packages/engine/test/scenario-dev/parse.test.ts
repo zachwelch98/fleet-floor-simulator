@@ -4,7 +4,8 @@ import type { Action } from '../../src/types.js';
 
 function action(line: string): Action {
   const parsed = parseScenarioLine(line);
-  if (parsed.kind !== 'action') throw new Error(`expected action for "${line}", got ${parsed.kind}`);
+  if (parsed.kind !== 'action')
+    throw new Error(`expected action for "${line}", got ${parsed.kind}`);
   return parsed.action;
 }
 
@@ -35,12 +36,20 @@ describe('FLOOR', () => {
     expect(action('FLOOR 21,5')).toEqual({ type: 'CREATE_FLOOR', width: 21, height: 5 });
     expect(action('FLOOR -1,5')).toEqual({ type: 'CREATE_FLOOR', width: -1, height: 5 });
   });
-  it.each(['FLOOR', 'FLOOR 4', 'FLOOR 4,', 'FLOOR ,3', 'FLOOR 4,3,2', 'FLOOR 4 3', 'FLOOR a,b', 'FLOOR 1.5,3', 'FLOOR 4,3x', 'FLOOR 4,3 5,5'])(
-    'rejects %j',
-    (line) => {
-      expect(isInvalid(line)).toBe(true);
-    },
-  );
+  it.each([
+    'FLOOR',
+    'FLOOR 4',
+    'FLOOR 4,',
+    'FLOOR ,3',
+    'FLOOR 4,3,2',
+    'FLOOR 4 3',
+    'FLOOR a,b',
+    'FLOOR 1.5,3',
+    'FLOOR 4,3x',
+    'FLOOR 4,3 5,5',
+  ])('rejects %j', (line) => {
+    expect(isInvalid(line)).toBe(true);
+  });
 });
 
 describe('OBSTACLE', () => {
@@ -56,24 +65,57 @@ describe('OBSTACLE', () => {
     expect(a).toEqual({ type: 'SET_OBSTACLE', x: 0, y: 0, present: true });
     expect(Object.is((a as { x: number }).x, 0)).toBe(true);
   });
-  it.each(['OBSTACLE', 'OBSTACLE 1', 'OBSTACLE 1,2,3', 'OBSTACLE 1 2', 'OBSTACLE a,1', 'OBSTACLE 1.5,2', 'OBSTACLE 1,2 3', 'OBSTACLE +1,2', 'OBSTACLE 1e1,2', 'OBSTACLE 0x1,2', 'OBSTACLE R1'])(
-    'rejects %j',
-    (line) => {
-      expect(isInvalid(line)).toBe(true);
-    },
-  );
+  it.each([
+    'OBSTACLE',
+    'OBSTACLE 1',
+    'OBSTACLE 1,2,3',
+    'OBSTACLE 1 2',
+    'OBSTACLE a,1',
+    'OBSTACLE 1.5,2',
+    'OBSTACLE 1,2 3',
+    'OBSTACLE +1,2',
+    'OBSTACLE 1e1,2',
+    'OBSTACLE 0x1,2',
+    'OBSTACLE R1',
+  ])('rejects %j', (line) => {
+    expect(isInvalid(line)).toBe(true);
+  });
 });
 
 describe('PLACE', () => {
   it('parses a canonical line', () => {
-    expect(action('PLACE R1 0,0,NORTH')).toEqual({ type: 'PLACE_ROBOT', id: 'R1', x: 0, y: 0, facing: 'NORTH' });
+    expect(action('PLACE R1 0,0,NORTH')).toEqual({
+      type: 'PLACE_ROBOT',
+      id: 'R1',
+      x: 0,
+      y: 0,
+      facing: 'NORTH',
+    });
   });
   it.each(['NORTH', 'EAST', 'SOUTH', 'WEST'] as const)('accepts facing %s', (facing) => {
-    expect(action(`PLACE R2 3,4,${facing}`)).toEqual({ type: 'PLACE_ROBOT', id: 'R2', x: 3, y: 4, facing });
+    expect(action(`PLACE R2 3,4,${facing}`)).toEqual({
+      type: 'PLACE_ROBOT',
+      id: 'R2',
+      x: 3,
+      y: 4,
+      facing,
+    });
   });
   it('is case-insensitive for keyword, id and facing', () => {
-    expect(action('place r3 1,2,west')).toEqual({ type: 'PLACE_ROBOT', id: 'R3', x: 1, y: 2, facing: 'WEST' });
-    expect(action('PlAcE R3 1,2,EaSt')).toEqual({ type: 'PLACE_ROBOT', id: 'R3', x: 1, y: 2, facing: 'EAST' });
+    expect(action('place r3 1,2,west')).toEqual({
+      type: 'PLACE_ROBOT',
+      id: 'R3',
+      x: 1,
+      y: 2,
+      facing: 'WEST',
+    });
+    expect(action('PlAcE R3 1,2,EaSt')).toEqual({
+      type: 'PLACE_ROBOT',
+      id: 'R3',
+      x: 1,
+      y: 2,
+      facing: 'EAST',
+    });
   });
   it('tolerates spaces around commas and repeated spaces', () => {
     const expected = { type: 'PLACE_ROBOT', id: 'R1', x: 0, y: 0, facing: 'EAST' };
@@ -159,10 +201,14 @@ describe('QUEUE', () => {
     expect(action('QUEUE R1 goto 3, 4 MOVE')).toMatchObject({
       commands: [{ kind: 'GOTO', x: 3, y: 4 }, { kind: 'MOVE' }],
     });
-    expect(action('QUEUE R1 GOTO 3 , 4')).toMatchObject({ commands: [{ kind: 'GOTO', x: 3, y: 4 }] });
+    expect(action('QUEUE R1 GOTO 3 , 4')).toMatchObject({
+      commands: [{ kind: 'GOTO', x: 3, y: 4 }],
+    });
   });
   it('lets negative GOTO targets through for the engine to reject', () => {
-    expect(action('QUEUE R1 GOTO -1,2')).toMatchObject({ commands: [{ kind: 'GOTO', x: -1, y: 2 }] });
+    expect(action('QUEUE R1 GOTO -1,2')).toMatchObject({
+      commands: [{ kind: 'GOTO', x: -1, y: 2 }],
+    });
   });
   it('normalizes the robot id', () => {
     expect(action('QUEUE R01 MOVE')).toMatchObject({ id: 'R1' });
@@ -208,12 +254,22 @@ describe('TICK', () => {
   it('has no upper cap', () => {
     expect(parseScenarioLine('TICK 1000000')).toEqual({ kind: 'tick', count: 1_000_000 });
   });
-  it.each(['TICK 0', 'TICK -1', 'TICK -0', 'TICK abc', 'TICK 1.5', 'TICK 2.0', 'TICK 3x', 'TICK 1 2', 'TICK 1,2', 'TICK +3', 'TICK 1e3', 'TICK 99999999999999999999'])(
-    'rejects %j',
-    (line) => {
-      expect(isInvalid(line)).toBe(true);
-    },
-  );
+  it.each([
+    'TICK 0',
+    'TICK -1',
+    'TICK -0',
+    'TICK abc',
+    'TICK 1.5',
+    'TICK 2.0',
+    'TICK 3x',
+    'TICK 1 2',
+    'TICK 1,2',
+    'TICK +3',
+    'TICK 1e3',
+    'TICK 99999999999999999999',
+  ])('rejects %j', (line) => {
+    expect(isInvalid(line)).toBe(true);
+  });
 });
 
 describe('REPORT', () => {
@@ -222,20 +278,34 @@ describe('REPORT', () => {
     expect(parseScenarioLine('  report  ')).toEqual({ kind: 'report' });
     expect(parseScenarioLine('Report')).toEqual({ kind: 'report' });
   });
-  it.each(['REPORT R1', 'REPORT 1', 'REPORT now', 'REPORT,'])('rejects extra tokens: %j', (line) => {
-    expect(isInvalid(line)).toBe(true);
-  });
+  it.each(['REPORT R1', 'REPORT 1', 'REPORT now', 'REPORT,'])(
+    'rejects extra tokens: %j',
+    (line) => {
+      expect(isInvalid(line)).toBe(true);
+    },
+  );
 });
 
 describe('unknown input', () => {
-  it.each(['JUMP', 'FLOORS 4,3', 'MOVE', 'R1 MOVE', 'PLACE_ROBOT R1 0,0,NORTH', '4,3', 'REMOVE R1', 'CLEAR R1', 'GOTO 1,1', 'TICKS 3', 'REPORTS', '// comment', '; comment'])(
-    'marks %j invalid',
-    (line) => {
-      const parsed = parseScenarioLine(line);
-      expect(parsed.kind).toBe('invalid');
-      if (parsed.kind === 'invalid') expect(parsed.why.length).toBeGreaterThan(0);
-    },
-  );
+  it.each([
+    'JUMP',
+    'FLOORS 4,3',
+    'MOVE',
+    'R1 MOVE',
+    'PLACE_ROBOT R1 0,0,NORTH',
+    '4,3',
+    'REMOVE R1',
+    'CLEAR R1',
+    'GOTO 1,1',
+    'TICKS 3',
+    'REPORTS',
+    '// comment',
+    '; comment',
+  ])('marks %j invalid', (line) => {
+    const parsed = parseScenarioLine(line);
+    expect(parsed.kind).toBe('invalid');
+    if (parsed.kind === 'invalid') expect(parsed.why.length).toBeGreaterThan(0);
+  });
   it('does not treat a trailing inline comment as a comment', () => {
     expect(isInvalid('REPORT # hi')).toBe(true);
     expect(isInvalid('TICK 3 # hi')).toBe(true);
@@ -244,7 +314,17 @@ describe('unknown input', () => {
 
 describe('purity', () => {
   it('returns equal results for repeated calls and never throws on junk', () => {
-    const junk = ['\u0000', ',,,', '   ,  ', 'PLACE ,,', 'QUEUE ,', 'FLOOR ,', '\r', 'ÄÖÜ 1,2', 'PLACE R1 0,0,NORTH\r'];
+    const junk = [
+      '\u0000',
+      ',,,',
+      '   ,  ',
+      'PLACE ,,',
+      'QUEUE ,',
+      'FLOOR ,',
+      '\r',
+      'ÄÖÜ 1,2',
+      'PLACE R1 0,0,NORTH\r',
+    ];
     for (const line of junk) {
       expect(() => parseScenarioLine(line)).not.toThrow();
       expect(parseScenarioLine(line)).toEqual(parseScenarioLine(line));
