@@ -1,7 +1,8 @@
 import { formatRobotId, parseRobotNum, stepForward, turnLeft, turnRight } from './geometry.js';
+import { firstStepToward } from './pathfinding.js';
 import { resolveMoves } from './resolve-moves.js';
 import type { MoveResolution } from './resolve-moves.js';
-import { MAX_FLOOR_SIZE, MIN_FLOOR_SIZE } from './types.js';
+import { GOTO_MAX_NO_PATH_TICKS, MAX_FLOOR_SIZE, MIN_FLOOR_SIZE } from './types.js';
 import type {
   Action,
   ApplyResult,
@@ -307,7 +308,8 @@ function clearQueue(state: FloorState, rawId: string): ApplyResult {
   if ('rejection' in found) {
     return found.rejection;
   }
-  const updated: Robot = { ...found.robot, queue: [] };
+  // A later GOTO must start with a fresh no-path budget (DECISIONS 3.5b).
+  const updated: Robot = { ...found.robot, queue: [], gotoNoPathTicks: 0 };
   return accept(replaceRobot(state, updated), [{ type: 'QUEUE_CLEARED', id: found.robot.id }]);
 }
 
@@ -427,15 +429,53 @@ function stationaryPlan(
 }
 
 /**
- * Phase 2 plugs GOTO in here. Contract for the implementation (DECISIONS section 3):
+ * GOTO (DECISIONS section 3). Each tick the robot searches for a shortest path afresh:
  *  - target is the robot's own cell → stationaryPlan(..., 'ARRIVED', 'ALWAYS'), counter reset to 0;
  *  - no path → stationaryPlan(..., 'WAITING', 'NEVER') with the counter + 1, or on the
  *    GOTO_MAX_NO_PATH_TICKS-th tick in a row 'UNREACHABLE' with 'ALWAYS' and the counter back at 0;
  *  - path found → a plan with the new facing, `moveTarget` set to the first step, the counter
  *    reset to 0, and removeFront 'IF_MOVED' when that step lands on the GOTO target, else 'NEVER'.
  */
-function planGotoStep(_state: FloorState, _robot: Robot, _command: Command): RobotPlan {
-  throw new Error('GOTO execution not implemented yet');
+function planGotoStep(state: FloorState, robot: Robot, command: Command): RobotPlan {
+  if (command.kind !== 'GOTO') {
+    throw new Error('planGotoStep needs a GOTO command');
+  }
+  const target: Position = { x: command.x, y: command.y };
+
+  if (robot.x === target.x && robot.y === target.y) {
+    return {
+      ...stationaryPlan(robot, command, robot.facing, 'ARRIVED', 'ALWAYS'),
+      gotoNoPathTicks: 0,
+    };
+  }
+
+  const direction = firstStepToward(state, robot, target);
+  if (direction === null) {
+    const noPathTicks = robot.gotoNoPathTicks + 1;
+    if (noPathTicks >= GOTO_MAX_NO_PATH_TICKS) {
+      return {
+        ...stationaryPlan(robot, command, robot.facing, 'UNREACHABLE', 'ALWAYS'),
+        gotoNoPathTicks: 0,
+      };
+    }
+    return {
+      ...stationaryPlan(robot, command, robot.facing, 'WAITING', 'NEVER'),
+      gotoNoPathTicks: noPathTicks,
+    };
+  }
+
+  // Turning to face the step is free and sticks even if the move is then blocked (DECISIONS 3.6).
+  const step = stepForward(robot, direction);
+  const stepIsTarget = step.x === target.x && step.y === target.y;
+  return {
+    robot,
+    command,
+    facing: direction,
+    gotoNoPathTicks: 0,
+    moveTarget: step,
+    stationaryOutcome: 'IDLE',
+    removeFront: stepIsTarget ? 'IF_MOVED' : 'NEVER',
+  };
 }
 
 // --- step 6: applying the outcome -------------------------------------------
