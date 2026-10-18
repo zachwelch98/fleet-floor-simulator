@@ -23,4 +23,25 @@ and why.
   differently from its recommendation. For example, it recommended "lowest unused" for the next
   robot ID; I chose max + 1 so that new robots never outrank existing ones.
 
+### Phase 0–1: engine, runner, tests, design (four parallel agents)
+- **Caught by review: the scenario output would have failed grading.** `npm run scenario` prints
+  npm's `> script` banner to stdout. No agent noticed; I checked the exact stdout before writing
+  any engine code and fixed it with `.npmrc` (`loglevel=silent`).
+- **Correction from an agent, accepted: my own spec was wrong.** The decisions draft said robots
+  behind a head-on pair are `BEHIND_BLOCKED` and asked for a 3-robot rotation test. The engine
+  agent pointed out that grids are bipartite (every loop is even, so the minimum rotation is 4)
+  and that the robot behind a head-on pair always loses a *contest* first. I checked both by hand,
+  fixed DECISIONS 2.1/2.7, and told the test agent before it finalized its expectations.
+- **Checking that a green test suite actually tests something.** The black-box suite (576 tests,
+  written without seeing the engine) passed on the first run against the real engine. I didn't
+  take that as proof. I injected six bugs into the engine (rotations treated as swaps, followers
+  always moving, highest ID winning contests, MOVE not consumed, no ID normalization, the wrong
+  block reason). Each one failed between 2 and 45 tests.
+- **Rejected: a test stand-in that outlived its purpose.** The runner agent mocked
+  `parseRobotNum` with a fallback copy because the real one didn't exist yet. After the merge I
+  removed the mock so the parser tests exercise the real function.
+- **Tooling issue found while merging:** ESLint and git in the main checkout were picking up the
+  agents' worktrees under `.claude/worktrees/`; they now ignore it. Prettier was not enforced
+  (an agent noticed); it is now part of `verify`.
+
 <!-- Entries added per phase: what was asked, accepted, rejected/rewritten, and why. -->

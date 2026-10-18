@@ -10,11 +10,11 @@ phase gate. Commit it along with the work it describes.
 
 ## Current position
 
-- **Phase:** 1 (engine core), agents running
-- **Waiting on:** Tester (Dev 1, Dev 2, Designer merged)
-- **Next action:** as each reports: review the diff in its worktree, merge its branch into main in the order
-  Dev 1 → Dev 2 → Tester → Designer, rescan the context map, run `npm run verify:fast`, triage
-  failures (code or test wrong? decide from the spec and DECISIONS) and route fixes back to the same agent.
+- **Phase:** 1 complete, awaiting gate
+- **Waiting on:** user review at the Phase 1 gate
+- **Next action:** after approval, Phase 2. Spawn Dev 1 (GOTO: implement `planGotoStep` in engine.ts + `pathfinding.ts`
+  per its doc comment and DECISIONS 3), Dev 2 (apps/api: NestJS + better-sqlite3, REST per protocol, normalized
+  tables + snapshot + events), Tester (GOTO tests/scenarios + API integration tests). Same worktree + merge procedure.
 - **If this session died mid-phase:** the agents' work lives in their worktree branches (`git worktree list`,
   `git branch`). Inspect each branch's commits and either merge them or re-spawn the role with the same brief.
 
@@ -33,9 +33,9 @@ phase gate. Commit it along with the work it describes.
 ### Phase 1: engine core (parallel)
 - [x] Dev 1: geometry, reducer, move resolution, TICK, merged (GOTO hook `planGotoStep` in engine.ts throws until Phase 2)
 - [x] Dev 2: scenario parser/runner/CLI, merged 3d50466 (**pulled forward from Phase 2** so golden tests can pass at this gate)
-- [ ] Tester: engine unit tests, reference resolver + property tests, golden scenarios brief a–e + edge cases
+- [x] Tester: 576 tests (unit per rule, reference resolver + 11 properties, 51 golden scenarios via real CLI), merged; all green on first run; mutation check: 6/6 injected bugs caught
 - [x] Designer: UI spec + tokens merged (`docs/design/UI_SPEC.md`, `tokens.css`); PM answers appended to spec §12
-- [ ] PM: merge, triage, `verify:fast` green
+- [x] PM: merge, triage, `verify:fast` green
 - [ ] **Gate**
 
 ### Phase 2: GOTO + runner + API (parallel)
@@ -65,7 +65,7 @@ phase gate. Commit it along with the work it describes.
 | Dev 1 Engine | a434bd38ee907bcef | worktree-agent-a434bd38ee907bcef | P1 done, merged |
 | Dev 2 Runner+API | a5454986fc9265830 | worktree-agent-a5454986fc9265830 | P1 done, merged (mock removed) |
 | Dev 3 Frontend | n/a | n/a | not started (Phase 3) |
-| Tester | a05a5fb07ec04efec | auto worktree | P1 running: unit, property, golden suite |
+| Tester | a05a5fb07ec04efec | worktree-agent-a05a5fb07ec04efec | P1 done, merged |
 
 Agent ids can be resumed with SendMessage only from the session that spawned them. A new session should re-spawn.
 Owned paths per role are listed in each brief (summarized in PLAN.md "Team and orchestration").
@@ -91,3 +91,4 @@ Owned paths per role are listed in each brief (summarized in PLAN.md "Team and o
 - 2026-10-18: Dev 2 runner merged (3d50466). ESLint now ignores .claude/** (it was linting agent worktrees).
 - 2026-10-18: Dev 1 engine merged; 164 dev tests green; CLI reproduces brief examples d and e. Prettier now enforced in verify (`format:check`). DECISIONS 2.7 added (grid geometry: min rotation 4, head-on follower is CONTESTED).
 - 2026-10-18: Designer spec merged. Protocol change: history query gains `limit` (newest-N when no `after`), HISTORY_DEFAULT_LIMIT 500 / MAX 2000.
+- 2026-10-18: Tester suite merged: 576/576 green, 51 golden scenarios through the real CLI. Mutation check 6/6 caught. DECISIONS 2.8 (pinned small rulings). Phase 1 complete.

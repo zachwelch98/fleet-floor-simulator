@@ -89,7 +89,19 @@ A robot that turns doesn't leave its cell, so a robot following it is blocked
 - **No chain can lead into a loop.** Each loop cell already has its single incoming mover from
   inside the loop, so an outside robot aiming at it would have lost a contest.
 
-### 2.8 Robot ID priority
+### 2.8 Smaller rulings pinned by tests
+- `TICK_RESOLVED.tick` is the tick count *after* the tick (the first tick is 1).
+- `CREATE_FLOOR` produces a completely fresh world, including `nextRobotNum = 1`. IDs are never
+  reused *within* a floor's life; a new floor starts over.
+- `TOGGLE_OBSTACLE` emits the same `OBSTACLE_SET` event as `SET_OBSTACLE`, with the new value.
+- A malformed ID (`R0`, `X1`) in any action is `INVALID_ID`; a well-formed ID with no robot is
+  `UNKNOWN_ROBOT`.
+- Two robots aiming at the same obstacle are both `OBSTACLE`, not `CONTESTED` (walls are decided
+  first, 2.3).
+- A contest winner stuck behind a robot that lost an earlier contest is `BEHIND_BLOCKED`; a
+  contest winner stuck behind an idle robot is `OCCUPIED`.
+
+### 2.9 Robot ID priority
 Robot priority compares the integer after "R" (R2 beats R10), as the brief says.
 
 ---
