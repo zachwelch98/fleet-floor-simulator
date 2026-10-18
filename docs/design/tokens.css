@@ -22,52 +22,66 @@
   color-scheme: light dark;
 
   /* ---- 1. Colors: light ------------------------------------------------ */
-  --color-bg: #f4f5f7;              /* page background */
-  --color-surface: #ffffff;         /* panels, toolbar, dialog */
-  --color-surface-2: #eceef2;       /* selected row, chips, hover */
+  --color-bg: #f4f5f7; /* page background */
+  --color-surface: #ffffff; /* panels, toolbar, dialog */
+  --color-surface-2: #eceef2; /* selected row, chips, hover */
   --color-text: #1a2130;
   --color-text-muted: #4a5568;
-  --color-border: #d3d8e0;          /* decorative dividers */
-  --color-border-strong: #6b7280;   /* control boundaries (>= 3:1) */
+  --color-border: #d3d8e0; /* decorative dividers */
+  --color-border-strong: #6b7280; /* control boundaries (>= 3:1) */
 
-  --color-accent: #1d4ed8;          /* primary button fill, links */
-  --color-accent-ink: #ffffff;      /* text on accent */
-  --color-focus: #1d4ed8;           /* keyboard focus ring */
-  --color-danger: #b91c1c;          /* delete button text/border */
+  --color-accent: #1d4ed8; /* primary button fill, links */
+  --color-accent-ink: #ffffff; /* text on accent */
+  --color-focus: #1d4ed8; /* keyboard focus ring */
+  --color-danger: #b91c1c; /* delete button text/border */
   --color-danger-ink: #ffffff;
 
   /* Grid */
   --color-cell: #ffffff;
   --color-cell-line: #d5dae3;
-  --color-hover: #6b7280;           /* hover outline on a clickable cell */
-  --color-obstacle: #3f4756;        /* + diagonal hatch, see --obstacle-hatch */
+  --color-hover: #6b7280; /* hover outline on a clickable cell */
+  --color-obstacle: #3f4756; /* + diagonal hatch, see --obstacle-hatch */
   --color-obstacle-stripe: #5b6475;
-  --color-selected: #111827;        /* selection ring: neutral ink, independent of robot hue */
-  --color-goto: #0f766e;            /* GOTO marker when no robot hue applies; markers normally use the robot's hue */
-  --color-edit: #b45309;            /* edit-mode border / switch */
-  --color-edit-bg: #fef3c7;         /* edit banner background */
-  --color-edit-ink: #78350f;        /* edit banner text */
+  --color-selected: #111827; /* selection ring: neutral ink, independent of robot hue */
+  --color-goto: #0f766e; /* GOTO marker when no robot hue applies; markers normally use the robot's hue */
+  --color-edit: #b45309; /* edit-mode border / switch */
+  --color-edit-bg: #fef3c7; /* edit banner background */
+  --color-edit-ink: #78350f; /* edit banner text */
 
   /* Robot hues (index = (robotNumber - 1) % 8). Ink is the ID/arrow color on top of any hue. */
-  --robot-1: #1d4ed8;               /* blue */
-  --robot-2: #b91c1c;               /* red */
-  --robot-3: #15803d;               /* green */
-  --robot-4: #7e22ce;               /* purple */
-  --robot-5: #0e7490;               /* teal */
-  --robot-6: #be185d;               /* pink */
-  --robot-7: #9a3412;               /* rust */
-  --robot-8: #475569;               /* slate */
+  --robot-1: #1d4ed8; /* blue */
+  --robot-2: #b91c1c; /* red */
+  --robot-3: #15803d; /* green */
+  --robot-4: #7e22ce; /* purple */
+  --robot-5: #0e7490; /* teal */
+  --robot-6: #be185d; /* pink */
+  --robot-7: #9a3412; /* rust */
+  --robot-8: #475569; /* slate */
   --robot-ink: #ffffff;
 
   /* Last-tick outcomes: --outcome-X-fg on --outcome-X-bg, border in --outcome-X-line.
      Each is always paired with a glyph and a text label (never color alone). */
-  --outcome-moved-fg: #14532d;       --outcome-moved-bg: #dcfce7;       --outcome-moved-line: #16a34a;
-  --outcome-turned-fg: #1e3a8a;      --outcome-turned-bg: #dbeafe;      --outcome-turned-line: #2563eb;
-  --outcome-blocked-fg: #7f1d1d;     --outcome-blocked-bg: #fee2e2;     --outcome-blocked-line: #dc2626;
-  --outcome-waiting-fg: #78350f;     --outcome-waiting-bg: #fef3c7;     --outcome-waiting-line: #d97706;
-  --outcome-idle-fg: #374151;        --outcome-idle-bg: #e5e7eb;        --outcome-idle-line: #9ca3af;
-  --outcome-unreachable-fg: #ffffff; --outcome-unreachable-bg: #991b1b; --outcome-unreachable-line: #7f1d1d;
-  --outcome-arrived-fg: #134e4a;     --outcome-arrived-bg: #ccfbf1;     --outcome-arrived-line: #0d9488;
+  --outcome-moved-fg: #14532d;
+  --outcome-moved-bg: #dcfce7;
+  --outcome-moved-line: #16a34a;
+  --outcome-turned-fg: #1e3a8a;
+  --outcome-turned-bg: #dbeafe;
+  --outcome-turned-line: #2563eb;
+  --outcome-blocked-fg: #7f1d1d;
+  --outcome-blocked-bg: #fee2e2;
+  --outcome-blocked-line: #dc2626;
+  --outcome-waiting-fg: #78350f;
+  --outcome-waiting-bg: #fef3c7;
+  --outcome-waiting-line: #d97706;
+  --outcome-idle-fg: #374151;
+  --outcome-idle-bg: #e5e7eb;
+  --outcome-idle-line: #9ca3af;
+  --outcome-unreachable-fg: #ffffff;
+  --outcome-unreachable-bg: #991b1b;
+  --outcome-unreachable-line: #7f1d1d;
+  --outcome-arrived-fg: #134e4a;
+  --outcome-arrived-bg: #ccfbf1;
+  --outcome-arrived-line: #0d9488;
 
   /* Toasts reuse outcome pairs: error = blocked, info = turned. */
   --toast-error-fg: var(--outcome-blocked-fg);
@@ -101,28 +115,28 @@
   --space-6: 32px;
   --space-7: 48px;
 
-  --radius-1: 4px;                  /* cells' robot token, chips */
-  --radius-2: 8px;                  /* panels, buttons, dialog */
-  --radius-pill: 999px;             /* badges, connection pill */
+  --radius-1: 4px; /* cells' robot token, chips */
+  --radius-2: 8px; /* panels, buttons, dialog */
+  --radius-pill: 999px; /* badges, connection pill */
 
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-  --text-xs: 0.75rem;               /* 12px: badges, axis max */
-  --text-sm: 0.875rem;              /* 14px: history lines, chips */
-  --text-md: 1rem;                  /* 16px: body, buttons (avoids iOS zoom on inputs) */
-  --text-lg: 1.25rem;               /* 20px: panel headings */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  --text-xs: 0.75rem; /* 12px: badges, axis max */
+  --text-sm: 0.875rem; /* 14px: history lines, chips */
+  --text-md: 1rem; /* 16px: body, buttons (avoids iOS zoom on inputs) */
+  --text-lg: 1.25rem; /* 20px: panel headings */
   --leading: 1.4;
 
-  --control-height: 44px;           /* touch target for buttons, slider */
+  --control-height: 44px; /* touch target for buttons, slider */
   --focus-ring: 3px solid var(--color-focus);
   --motion-fast: 120ms;
 
   /* ---- 3. Layout and cell sizing --------------------------------------- */
-  --breakpoint-desktop: 900px;      /* documentation only: custom properties can't be used in @media */
+  --breakpoint-desktop: 900px; /* documentation only: custom properties can't be used in @media */
   --sidebar-w: 360px;
-  --axis-size: 24px;                /* width of y labels / height of x labels */
-  --cell-min: 12px;                 /* 20 columns still fit a 320px screen without page scroll */
-  --cell-max: 56px;                 /* 10x8 on a big monitor */
+  --axis-size: 24px; /* width of y labels / height of x labels */
+  --cell-min: 12px; /* 20 columns still fit a 320px screen without page scroll */
+  --cell-max: 56px; /* 10x8 on a big monitor */
 
   /* Space the grid cannot use. Mobile default: page gutters (2 x 16) + y axis.
      Vertical limit only matters on desktop, so mobile uses a small value. */
@@ -133,7 +147,9 @@
 /* Desktop: sidebar + gap + page padding + y axis; header + toolbar + status line + x axis + padding. */
 @media (min-width: 900px) {
   :root {
-    --grid-chrome-x: calc(var(--sidebar-w) + var(--space-5) + 2 * var(--space-4) + var(--axis-size));
+    --grid-chrome-x: calc(
+      var(--sidebar-w) + var(--space-5) + 2 * var(--space-4) + var(--axis-size)
+    );
     --grid-chrome-y: 196px;
   }
 }
@@ -196,13 +212,27 @@
     --robot-8: #a3b1c6;
     --robot-ink: #0b1220;
 
-    --outcome-moved-fg: #bbf7d0;       --outcome-moved-bg: #14532d;       --outcome-moved-line: #4ade80;
-    --outcome-turned-fg: #bfdbfe;      --outcome-turned-bg: #1e3a8a;      --outcome-turned-line: #60a5fa;
-    --outcome-blocked-fg: #fecaca;     --outcome-blocked-bg: #7f1d1d;     --outcome-blocked-line: #f87171;
-    --outcome-waiting-fg: #fde68a;     --outcome-waiting-bg: #78350f;     --outcome-waiting-line: #fbbf24;
-    --outcome-idle-fg: #d1d5db;        --outcome-idle-bg: #374151;        --outcome-idle-line: #6b7280;
-    --outcome-unreachable-fg: #ffffff; --outcome-unreachable-bg: #b91c1c; --outcome-unreachable-line: #fca5a5;
-    --outcome-arrived-fg: #99f6e4;     --outcome-arrived-bg: #134e4a;     --outcome-arrived-line: #2dd4bf;
+    --outcome-moved-fg: #bbf7d0;
+    --outcome-moved-bg: #14532d;
+    --outcome-moved-line: #4ade80;
+    --outcome-turned-fg: #bfdbfe;
+    --outcome-turned-bg: #1e3a8a;
+    --outcome-turned-line: #60a5fa;
+    --outcome-blocked-fg: #fecaca;
+    --outcome-blocked-bg: #7f1d1d;
+    --outcome-blocked-line: #f87171;
+    --outcome-waiting-fg: #fde68a;
+    --outcome-waiting-bg: #78350f;
+    --outcome-waiting-line: #fbbf24;
+    --outcome-idle-fg: #d1d5db;
+    --outcome-idle-bg: #374151;
+    --outcome-idle-line: #6b7280;
+    --outcome-unreachable-fg: #ffffff;
+    --outcome-unreachable-bg: #b91c1c;
+    --outcome-unreachable-line: #fca5a5;
+    --outcome-arrived-fg: #99f6e4;
+    --outcome-arrived-bg: #134e4a;
+    --outcome-arrived-line: #2dd4bf;
 
     --conn-connected: #4ade80;
     --conn-reconnecting: #fbbf24;
@@ -229,7 +259,7 @@ body {
   outline-offset: 2px;
 }
 /* Grid cells draw their focus ring inset so it never collides with the outer selection ring. */
-.floor-grid [role="gridcell"]:focus-visible {
+.floor-grid [role='gridcell']:focus-visible {
   outline: var(--focus-ring);
   outline-offset: -3px;
 }

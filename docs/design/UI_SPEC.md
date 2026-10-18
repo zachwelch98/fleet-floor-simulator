@@ -746,3 +746,20 @@ The newest block is first in DOM order.
 4. **Blocked results**: the spec assumes `to == from` for a BLOCKED result and derives the attempted cell from `facing`. Confirm.
 5. **Socket reconnect policy**: left to the developers; suggestion is 10 attempts with backoff, then `disconnected` plus the Reconnect button.
 6. **Auto-select after placing** relies on `CommandSuccess.history` containing the `ROBOT_PLACED` entry (it does in the protocol).
+
+### PM answers (2026-10-18)
+
+1. **History at load:** the protocol now bounds it. `GET /history?limit=N` without `after` returns
+   the newest N entries (ascending; default 500, max 2000). The UI loads `?limit=500` at start; if
+   the newest `TICK_RESOLVED` is not in that window, there are simply no last-tick badges.
+   Incremental catch-up uses `?after=SEQ`.
+2. **Edit-mode click on a robot:** confirmed. The engine rejects `TOGGLE_OBSTACLE` on a robot's
+   cell with `CELL_OCCUPIED`.
+3. **`CREATE_FLOOR` resets `state.tick` to 0:** confirmed. Use `data-seq` as specified.
+4. **BLOCKED results have `to == from`:** confirmed, and `facing` is the direction attempted (a
+   GOTO turn sticks even when the step is blocked).
+5. **Reconnect:** accepted as suggested (10 attempts with backoff, then `disconnected` +
+   Reconnect).
+6. **Auto-select after placing:** confirmed; `CommandSuccess.history` includes `ROBOT_PLACED`.
+
+All 33 design decisions in section 11 are accepted.

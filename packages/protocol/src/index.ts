@@ -12,6 +12,9 @@ export const MIN_TICK_INTERVAL_MS = 100;
 export const MAX_TICK_INTERVAL_MS = 5_000;
 export const DEFAULT_TICK_INTERVAL_MS = 500;
 
+export const HISTORY_DEFAULT_LIMIT = 500;
+export const HISTORY_MAX_LIMIT = 2_000;
+
 export interface FloorDto {
   readonly id: string;
   /** Increments by exactly 1 per committed action (including each tick). */
@@ -37,7 +40,10 @@ export interface HistoryEntry {
 // ---------------------------------------------------------------------------
 // REST
 //   GET  /api/floors/:id                    → FloorDto
-//   GET  /api/floors/:id/history?after=SEQ  → HistoryEntry[] (ascending seq; after defaults to 0)
+//   GET  /api/floors/:id/history?after=SEQ&limit=N → HistoryEntry[], ascending seq.
+//        With `after`: entries with seq > after, oldest first, at most `limit`.
+//        Without `after`: the NEWEST `limit` entries (still returned in ascending order).
+//        `limit` defaults to HISTORY_DEFAULT_LIMIT and is clamped to [1, HISTORY_MAX_LIMIT].
 //   POST /api/floors/:id/commands  CommandRequest → 200 CommandSuccess | 409 CommandRejected | 400 malformed body
 //   POST /api/floors/:id/step                → 200 CommandSuccess (one TICK)
 //   POST /api/floors/:id/play  PlayRequest   → 200 FloorDto (idempotent)
