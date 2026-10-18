@@ -1,0 +1,20 @@
+# A GOTO step is a normal MOVE: R1 (lower number, plain MOVE) and R3 (GOTO 1,2) both claim (1,2). R1 wins.
+# R3 is blocked but keeps the GOTO and keeps the facing it turned to (NORTH). R4, queued behind R3, is blocked too.
+# Tick 2: R1 now holds R3's target, so R3 waits. R1 moves on at tick 3; R3 still plans from the old cells (waits);
+# on tick 4 the way is free and R3 arrives.
+FLOOR 3,3
+PLACE R1 0,2,EAST
+PLACE R3 1,1,WEST
+PLACE R4 1,0,NORTH
+QUEUE R1 MOVE
+QUEUE R3 GOTO 1,2
+QUEUE R4 MOVE
+TICK
+REPORT
+TICK
+REPORT
+QUEUE R1 MOVE
+TICK
+REPORT
+TICK
+REPORT

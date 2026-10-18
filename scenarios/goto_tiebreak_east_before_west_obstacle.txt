@@ -1,0 +1,14 @@
+# Tie-break around an obstacle: with the centre blocked, going north from (1,0) to (1,2) is 4 steps either way
+# round it (via the west column or the east column). EAST beats WEST: E, N, N, W.
+FLOOR 3,3
+OBSTACLE 1,1
+PLACE R1 1,0,NORTH
+QUEUE R1 GOTO 1,2
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT

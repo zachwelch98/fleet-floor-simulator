@@ -1,0 +1,12 @@
+# A target is validated only when queued. Here (2,0) becomes an obstacle after tick 1, so R1 (now at (1,0)) has no
+# path: it waits on ticks 2 and 3, gives up on tick 4, and RIGHT runs on tick 5.
+FLOOR 3,3
+PLACE R1 0,0,EAST
+QUEUE R1 GOTO 2,0 RIGHT
+TICK
+REPORT
+OBSTACLE 2,0
+TICK 3
+REPORT
+TICK
+REPORT

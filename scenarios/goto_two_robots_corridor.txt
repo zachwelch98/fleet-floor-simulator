@@ -1,0 +1,16 @@
+# Two GOTO robots swapping ends of a corridor. Both targets are free on tick 1, so both step.
+# Afterwards each stands on the other's target: both WAIT (ticks 2, 3) and give up (tick 4). They never swap.
+# Then two plain MOVEs: both aim at (2,0); the lower number (R1) wins, R2 is contested and stays.
+FLOOR 5,1
+PLACE R1 0,0,EAST
+PLACE R2 4,0,WEST
+QUEUE R1 GOTO 3,0
+QUEUE R2 GOTO 1,0
+TICK
+REPORT
+TICK 3
+REPORT
+QUEUE R1 MOVE
+QUEUE R2 MOVE
+TICK
+REPORT

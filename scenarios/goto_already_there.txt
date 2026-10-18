@@ -1,0 +1,9 @@
+# GOTO to the cell the robot already stands on: ARRIVED, and it still uses up the tick (no move, facing unchanged).
+# The next command (MOVE) runs on tick 2.
+FLOOR 3,3
+PLACE R1 1,1,EAST
+QUEUE R1 GOTO 1,1 MOVE
+TICK
+REPORT
+TICK
+REPORT

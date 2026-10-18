@@ -1,0 +1,16 @@
+# The path is re-planned every tick. R1 heads east along y = 0; after tick 2 an obstacle appears at (3,0),
+# so it goes up and around: N (2,1), E (3,1), E (4,1), S (4,0).
+FLOOR 5,2
+PLACE R1 0,0,EAST
+QUEUE R1 GOTO 4,0
+TICK 2
+REPORT
+OBSTACLE 3,0
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT

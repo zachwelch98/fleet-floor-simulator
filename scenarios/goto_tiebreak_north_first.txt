@@ -1,0 +1,13 @@
+# Tie-break: the target is diagonal to the north-east, so NORTH and EAST are equally short first steps and NORTH wins.
+# The preference applies at every tick: N, N, then E, E. R1 starts facing WEST (the turn is free).
+FLOOR 3,3
+PLACE R1 0,0,WEST
+QUEUE R1 GOTO 2,2
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT

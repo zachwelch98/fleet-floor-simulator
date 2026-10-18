@@ -1,0 +1,17 @@
+# After two waiting ticks a path reappears (R2 leaves the target), so the no-path counter goes back to 0.
+# R3 then parks on the target: R1 needs a full three no-path ticks again (ticks 4, 5, 6) before UNREACHABLE,
+# and only then does RIGHT run (tick 7). If the counter had not been reset, RIGHT would already run on tick 5.
+FLOOR 3,3
+PLACE R1 0,0,EAST
+PLACE R2 2,0,WEST
+QUEUE R1 GOTO 2,0 RIGHT
+QUEUE R2 RIGHT MOVE
+TICK 3
+REPORT
+PLACE R3 2,0,NORTH
+TICK 2
+REPORT
+TICK
+REPORT
+TICK
+REPORT

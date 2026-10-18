@@ -1,0 +1,11 @@
+# GOTO along a straight corridor: one cell per tick, and turning to face the step is free (R1 starts facing SOUTH).
+# R1 arrives on tick 4 (GOTO is then removed) and stays put afterwards.
+FLOOR 5,1
+PLACE R1 0,0,SOUTH
+QUEUE R1 GOTO 4,0
+TICK
+REPORT
+TICK 3
+REPORT
+TICK
+REPORT

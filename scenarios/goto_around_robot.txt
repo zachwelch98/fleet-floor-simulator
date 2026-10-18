@@ -1,0 +1,18 @@
+# Other robots are walls. R2 is parked on (2,0); R1 wants (4,0) on the same row, so it goes over the top.
+# First step: N and E tie (both leave distance 5) -> NORTH. Then E, E, E; at (3,1) E and S tie -> EAST; finally S.
+FLOOR 5,2
+PLACE R2 2,0,NORTH
+PLACE R1 0,0,EAST
+QUEUE R1 GOTO 4,0
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT

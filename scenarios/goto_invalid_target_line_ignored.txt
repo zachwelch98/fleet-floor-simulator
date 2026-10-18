@@ -1,0 +1,18 @@
+# Targets that are off the floor, on an obstacle or negative make the WHOLE QUEUE line invalid, even the other commands on it.
+# A target held by another robot is fine (it may move away): QUEUE R1 GOTO 3,3 is accepted, but R2 never leaves,
+# so R1 waits twice and gives up on tick 3. The final MOVE (a separate valid line) runs on tick 4.
+FLOOR 4,4
+OBSTACLE 2,2
+PLACE R1 0,0,EAST
+PLACE R2 3,3,WEST
+QUEUE R1 GOTO 4,0
+QUEUE R1 MOVE GOTO 2,2 LEFT
+QUEUE R1 GOTO -1,0
+QUEUE R1 GOTO 3,3
+QUEUE R1 MOVE
+TICK
+REPORT
+TICK 2
+REPORT
+TICK
+REPORT

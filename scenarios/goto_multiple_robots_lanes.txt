@@ -1,0 +1,12 @@
+# Three GOTO robots on three separate lanes run side by side without disturbing each other.
+FLOOR 4,3
+PLACE R1 0,0,NORTH
+PLACE R2 3,1,SOUTH
+PLACE R3 0,2,SOUTH
+QUEUE R1 GOTO 3,0
+QUEUE R2 GOTO 0,1
+QUEUE R3 GOTO 3,2
+TICK 2
+REPORT
+TICK 2
+REPORT

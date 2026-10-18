@@ -1,0 +1,12 @@
+# Tie-break: target diagonal to the south-west (S and W tie) -> SOUTH first. Route: S, S, W, W.
+FLOOR 3,3
+PLACE R1 2,2,EAST
+QUEUE R1 GOTO 0,0
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT

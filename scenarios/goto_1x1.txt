@@ -1,0 +1,8 @@
+# 1x1 floor: the only valid target is the robot's own cell, so GOTO ARRIVES at once; LEFT then runs on tick 2.
+FLOOR 1,1
+PLACE R1 0,0,NORTH
+QUEUE R1 GOTO 0,0 LEFT
+TICK
+REPORT
+TICK
+REPORT
