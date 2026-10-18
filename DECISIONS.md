@@ -155,6 +155,15 @@ and the GOTO is removed. The next queued command runs on the next tick.
 
 ---
 
+### 3.9 Consequence: GOTO robots don't queue up behind each other in a 1-wide corridor
+Because every other robot's cell is a wall when planning (brief, literally), a GOTO robot
+directly behind another robot in a one-wide corridor has *no path*, even if the robot in front is
+about to move away. It waits, and after 3 such ticks its GOTO is dropped as UNREACHABLE. Two
+GOTO robots facing each other in such a corridor both give up on tick 3. *Why kept:* this is
+exactly what the brief specifies, and it guarantees GOTO never deadlocks forever. A
+"traffic-aware" planner (treat robots as passable at a cost, or plan through cells being
+vacated) is listed under future work in the README.
+
 ## 4. Scenario runner
 
 ### 4.1 FLOOR resets the world **[gap]**
