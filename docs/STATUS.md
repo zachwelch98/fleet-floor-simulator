@@ -10,7 +10,7 @@ phase gate. Commit it along with the work it describes.
 
 ## Current position
 
-- **Phase:** 0 (PM scaffold), nearly complete
+- **Phase:** 0 (PM scaffold), complete, awaiting gate
 - **Waiting on:** user review of the contracts and DECISIONS.md (Phase 0 gate)
 - **Next action:** after the user approves, start Phase 1. Spawn Dev 1 (engine), Tester, and
   Designer in parallel worktrees, using the brief templates under "Agent briefs" in PLAN.md.
@@ -23,8 +23,8 @@ phase gate. Commit it along with the work it describes.
 - [x] Protocol contract `packages/protocol/src/index.ts`
 - [x] DECISIONS.md draft, AI_USAGE.md stub, README stub, PLAN.md + STATUS.md in repo, CLAUDE.md
 - [x] `npm run typecheck` and `npm run lint` green
-- [ ] Context map bootstrap (`scan_project.py`)
-- [ ] Initial commit(s)
+- [x] Context map bootstrap (`scan_project.py`): 11 files, all TS entries exact
+- [x] Initial commits (718adc2 scaffold, 45f2a97 docs)
 - [ ] **Gate:** user approves contracts + decisions
 
 ### Phase 1: engine core (parallel)
@@ -78,3 +78,4 @@ phase gate. Commit it along with the work it describes.
 ## Log
 
 - 2026-10-18: plan approved; Phase 0 scaffold built; typecheck and lint green.
+- 2026-10-18: context map bootstrapped; Phase 0 committed. Brief PDF is gitignored (employer document, repo will be public).
