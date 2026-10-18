@@ -1,4 +1,8 @@
+import 'reflect-metadata';
 import type { INestApplication } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { API_PREFIX } from '@fleet/protocol';
+import { AppModule } from './app.module.js';
 
 /**
  * Contract between Dev 2 (implements) and the Tester (uses in integration tests).
@@ -11,11 +15,22 @@ export interface AppOptions {
   readonly now?: () => Date;
 }
 
+/** The dev UI (ng serve) origin allowed by CORS. */
+export const DEV_UI_ORIGIN = 'http://localhost:4200';
+
 /**
  * Builds a fully configured, initialized Nest app (global '/api' prefix, routes per
  * @fleet/protocol, default floor 'main' created at 10x8 if the database has none).
  * Does NOT call listen(); tests use `supertest(app.getHttpServer())`, main.ts calls listen().
  */
-export async function createApp(_options: AppOptions): Promise<INestApplication> {
-  throw new Error('createApp: not implemented');
+export async function createApp(options: AppOptions): Promise<INestApplication> {
+  const app = await NestFactory.create(
+    AppModule.register({ dbPath: options.dbPath, now: options.now ?? (() => new Date()) }),
+    { logger: ['error', 'warn'] },
+  );
+  // API_PREFIX is '/api'; Nest wants it without the leading slash.
+  app.setGlobalPrefix(API_PREFIX.replace(/^\//, ''));
+  app.enableCors({ origin: DEV_UI_ORIGIN });
+  await app.init();
+  return app;
 }
