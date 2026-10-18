@@ -474,13 +474,4 @@ describe('reducer actions', () => {
       expect(apply(s, action).ok).toBe(true);
     }
   });
-
-  it('TICK throws for GOTO until Phase 2', () => {
-    const s = run(floor5, place('R1', 0, 0, 'NORTH'), {
-      type: 'QUEUE_COMMANDS',
-      id: 'R1',
-      commands: [{ kind: 'GOTO', x: 3, y: 3 }],
-    });
-    expect(() => apply(s, { type: 'TICK' })).toThrow('GOTO execution not implemented yet');
-  });
 });
