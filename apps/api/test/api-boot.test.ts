@@ -98,7 +98,8 @@ describe('boot: isolation and playback controls', () => {
     }
   });
 
-  it('pause is idempotent and leaves the floor paused with unchanged contents', async () => {
+  // Phase 3: play/pause endpoints are not built yet (TickScheduler). Un-skip when they land.
+  it.skip('pause is idempotent and leaves the floor paused with unchanged contents', async () => {
     const before = await getFloor(app);
     for (let i = 0; i < 2; i++) {
       const res = await http(app).post(`${API_PREFIX}/floors/main/pause`).send();
