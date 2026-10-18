@@ -1,0 +1,15 @@
+# GOTO in the middle of a queue: MOVE, GOTO 2,2, LEFT.
+# t1 MOVE (0,1); t2 N (0,2) (N and E tie); t3 E (1,2); t4 E (2,2), arrives; t5 LEFT turns EAST -> NORTH.
+FLOOR 5,5
+PLACE R1 0,0,NORTH
+QUEUE R1 MOVE GOTO 2,2 LEFT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT

@@ -1,0 +1,21 @@
+# Routing: a wall of obstacles on row 1 with a single gap at x = 2. R1 at (0,0) wants (0,2), straight "through" the wall.
+# Only route: east to (2,0), north through the gap to (2,2), west to (0,2): 6 steps.
+FLOOR 5,3
+OBSTACLE 0,1
+OBSTACLE 1,1
+OBSTACLE 3,1
+OBSTACLE 4,1
+PLACE R1 0,0,EAST
+QUEUE R1 GOTO 0,2
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT

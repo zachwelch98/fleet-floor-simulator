@@ -1,0 +1,15 @@
+# PLACE on an existing robot resets its GOTO no-path counter and keeps its queue.
+# R1 waits on ticks 1 and 2, is re-placed (same cell), then needs three fresh waiting ticks: 3, 4 are WAITING,
+# tick 5 is UNREACHABLE, and RIGHT (NORTH -> EAST) runs on tick 6.
+FLOOR 3,1
+PLACE R1 0,0,NORTH
+PLACE R2 2,0,EAST
+QUEUE R1 GOTO 2,0 RIGHT
+TICK 2
+PLACE R1 0,0,NORTH
+TICK 2
+REPORT
+TICK
+REPORT
+TICK
+REPORT

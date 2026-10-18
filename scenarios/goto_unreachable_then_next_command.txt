@@ -1,0 +1,14 @@
+# The target (2,0) is held by idle R2, so R1 has no path: WAITING on ticks 1 and 2, UNREACHABLE on tick 3 (the GOTO is dropped).
+# Waiting never changes the facing. The next command (RIGHT) runs on tick 4, then MOVE on tick 5.
+FLOOR 3,1
+PLACE R1 0,0,NORTH
+PLACE R2 2,0,EAST
+QUEUE R1 GOTO 2,0 RIGHT MOVE
+TICK 2
+REPORT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT

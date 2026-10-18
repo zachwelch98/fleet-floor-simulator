@@ -1,0 +1,15 @@
+# R2 stands on R1's target (2,0) and leaves on tick 2 (RIGHT turns it north, MOVE steps to (2,1)).
+# R1 plans from the cells at the START of a tick: waiting on ticks 1 and 2, then a path on tick 3, arrival on tick 4.
+FLOOR 3,3
+PLACE R1 0,0,NORTH
+PLACE R2 2,0,WEST
+QUEUE R1 GOTO 2,0
+QUEUE R2 RIGHT MOVE
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT

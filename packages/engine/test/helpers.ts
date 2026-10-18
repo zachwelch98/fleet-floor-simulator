@@ -255,3 +255,46 @@ export function deepFreeze<T>(value: T): T {
 export function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
+
+// ---------------------------------------------------------------------------
+// GOTO helpers (Phase 2)
+// ---------------------------------------------------------------------------
+
+/** The result for one robot from a tick's results; throws if the robot has none. */
+export function resultOf(results: readonly RobotTickResult[], id: string): RobotTickResult {
+  const r = results.find((x) => x.id === id);
+  if (!r) throw new Error(`no result for ${id}`);
+  return r;
+}
+
+export interface Trail {
+  readonly state: FloorState;
+  /** "x,y" of the robot after each tick. */
+  readonly at: string[];
+  /** "x,y,FACING" of the robot after each tick. */
+  readonly pose: string[];
+  /** Outcome text for the robot on each tick (see `outcomes`), e.g. MOVED, WAITING, BLOCKED(CONTESTED). */
+  readonly out: string[];
+  /** Every tick's full result list. */
+  readonly results: RobotTickResult[][];
+}
+
+/** Run n ticks and record what happened to one robot on each of them. */
+export function trail(state: FloorState, id: string, n: number): Trail {
+  const { state: end, history } = ticks(state, n);
+  const at: string[] = [];
+  const pose: string[] = [];
+  const out: string[] = [];
+  for (const results of history) {
+    const r = resultOf(results, id);
+    at.push(`${r.to.x},${r.to.y}`);
+    pose.push(`${r.to.x},${r.to.y},${r.facing}`);
+    out.push(outcomes([r])[id] ?? '?');
+  }
+  return { state: end, at, pose, out, results: history };
+}
+
+/** True when a result carries `reachedGoto: true` (the field is optional on other results). */
+export function reached(r: RobotTickResult): boolean {
+  return r.reachedGoto === true;
+}
