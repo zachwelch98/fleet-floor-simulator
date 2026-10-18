@@ -260,6 +260,19 @@ empty world must reproduce the current state exactly. A test checks that tables,
 replay are deep-equal, so the three can never drift apart.
 Rejected actions are not stored (they changed nothing); the rejected client is told why.
 
+### 6.1b API validation split: shape → 400, meaning → 409
+The API checks only the *shape* of a request by hand (type tag, field types, facing spelling,
+commands is an array of objects with a string `kind`). Anything shaped right goes to the engine,
+which is the single authority on *meaning*: out-of-range numbers, bad robot IDs, empty command
+lists, and unknown command kinds come back as 409 with the engine's `RejectionReason`. Unknown
+extra keys are dropped. *Why:* the rules live in one place (the engine) and the scenario runner
+and API can't disagree.
+
+### 6.1c Successful no-ops still commit
+A successful action that changes nothing (e.g. `SET_OBSTACLE` on an existing obstacle) still
+bumps the version and is stored as an action, with no history events. *Why:* "version increments
+by exactly 1 per accepted action" stays a simple invariant, and replay stays exact.
+
 ### 6.2 Play state is not persisted **[gap]**
 After a server restart every floor comes back paused. *Why:* play/pause is a session control,
 not floor state; resuming silently after a crash would move robots with nobody watching.

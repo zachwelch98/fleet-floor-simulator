@@ -11,7 +11,7 @@ phase gate. Commit it along with the work it describes.
 ## Current position
 
 - **Phase:** 2 (GOTO + API), agents running
-- **Waiting on:** Dev 1 (GOTO), Dev 2 (API + SQLite), Tester (GOTO + API integration tests)
+- **Waiting on:** Tester (GOTO + API integration tests); Dev 1 and Dev 2 merged
 - **Next action:** as each reports, review → merge (Dev 1, Dev 2, then Tester) → rescan map → `npm run verify:fast`
   plus `npm test -w @fleet/api` → triage failures → mutation spot-check (as in Phase 1) → Phase 2 gate.
 - **If this session died mid-phase:** the agents' work lives in their worktree branches (`git worktree list`,
@@ -38,8 +38,8 @@ phase gate. Commit it along with the work it describes.
 - [x] **Gate** (user approved 2026-10-18)
 
 ### Phase 2: GOTO + runner + API (parallel)
-- [ ] Dev 1: GOTO pathfinding (Module A)
-- [ ] Dev 2: API + SQLite (normalized + snapshot + events)
+- [x] Dev 1: GOTO pathfinding (Module A), merged; 595 engine tests green
+- [x] Dev 2: API + SQLite, merged; 18 API tests; PM smoke on built server: GOTO detour, rejection, restart persistence OK
 - [ ] Tester: GOTO tests/scenarios, API integration tests (incl. consistency check)
 - [ ] **Gate:** all golden scenarios pass via `npm run scenario`
 
@@ -61,8 +61,8 @@ phase gate. Commit it along with the work it describes.
 | Role | Agent name/id | Worktree/branch | Status |
 |---|---|---|---|
 | Designer | a35ce8417110865b7 | worktree-agent-a35ce8417110865b7 | P1 done, merged. Phase 3: reviews Dev 3's UI |
-| Dev 1 Engine | aaf3ab90be8c8d6ca | auto worktree | P2 running: GOTO (P1 agent a434bd38ee907bcef done) |
-| Dev 2 Runner+API | a3ff83292a4b28fa1 | auto worktree | P2 running: API + SQLite (P1 agent a5454986fc9265830 done) |
+| Dev 1 Engine | aaf3ab90be8c8d6ca | worktree-agent-aaf3ab90be8c8d6ca | P2 done, merged |
+| Dev 2 Runner+API | a3ff83292a4b28fa1 | worktree-agent-a3ff83292a4b28fa1 | P2 done, merged. Phase 3 hooks: FloorsService.committed Observable, step(), toDto playback fields |
 | Dev 3 Frontend | n/a | n/a | not started (Phase 3) |
 | Tester | aad7c6b78ad97bce8 | auto worktree | P2 running: GOTO + API tests (P1 agent a05a5fb07ec04efec done) |
 
@@ -92,3 +92,4 @@ Owned paths per role are listed in each brief (summarized in PLAN.md "Team and o
 - 2026-10-18: Designer spec merged. Protocol change: history query gains `limit` (newest-N when no `after`), HISTORY_DEFAULT_LIMIT 500 / MAX 2000.
 - 2026-10-18: Tester suite merged: 576/576 green, 51 golden scenarios through the real CLI. Mutation check 6/6 caught. DECISIONS 2.8 (pinned small rulings). Phase 1 complete.
 - 2026-10-18: Phase 1 gate approved. PM scaffolded apps/api (all deps pre-installed; contracts app.factory.ts createApp + testing.ts inspectFloor). DECISIONS 6.1 revised (actions table for replay; latest-only snapshot), 3.5b added. Phase 2 agents spawned.
+- 2026-10-18: Dev 1 GOTO merged (DECISIONS 3.9 corridor consequence). Dev 2 API merged (DECISIONS 6.1b validation split, 6.1c no-op commits). PM end-to-end smoke on built server OK.
