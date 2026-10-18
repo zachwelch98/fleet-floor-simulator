@@ -1,0 +1,36 @@
+{
+  "name": "fleet-floor-simulator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Simulates a fleet of warehouse robots sharing one grid floor, resolved one simultaneous tick at a time.",
+  "workspaces": [
+    "packages/engine",
+    "packages/protocol",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "scenario": "tsx packages/engine/src/cli/scenario.ts",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run build -w @fleet/engine && npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "npm run test --workspaces --if-present",
+    "e2e": "npm run e2e --workspaces --if-present",
+    "verify:fast": "npm run typecheck && npm run lint && npm run test -w @fleet/engine",
+    "verify": "npm run typecheck && npm run lint && npm run build && npm run test && npm run e2e"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "eslint": "^10.13.0",
+    "fast-check": "^4.10.2",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^5.0.5",
+    "@types/node": "^22.0.0"
+  }
+}
