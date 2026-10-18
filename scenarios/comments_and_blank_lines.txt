@@ -1,0 +1,12 @@
+# Lines starting with # are comments, even when they contain a valid command. Blank and whitespace-only lines are skipped.
+# a comment
+
+   
+# TICK 100
+#REPORT
+FLOOR 3,3
+
+PLACE R1 0,0,EAST
+# QUEUE R1 MOVE
+TICK 
+REPORT

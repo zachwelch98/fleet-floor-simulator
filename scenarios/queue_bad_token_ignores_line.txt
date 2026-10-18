@@ -1,0 +1,14 @@
+# A QUEUE line with one bad token is ignored as a whole (DECISIONS 4.5). So are QUEUE for an unknown robot and QUEUE with no commands.
+# Only the final valid line queues two MOVEs.
+FLOOR 5,5
+PLACE R1 0,0,EAST
+QUEUE R1 MOVE JUMP LEFT
+QUEUE R9 MOVE
+QUEUE R1
+QUEUE R1 MOVE MOVE
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT

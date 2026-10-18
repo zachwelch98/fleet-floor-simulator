@@ -1,0 +1,9 @@
+# R2 beats R10 for the contested cell (1,0). Priority is the NUMBER, not the text:
+# a string compare would wrongly make R10 win. Also checks REPORT sorts R2 before R10.
+FLOOR 5,5
+PLACE R10 0,0,EAST
+PLACE R2 2,0,WEST
+QUEUE R10 MOVE
+QUEUE R2 MOVE
+TICK
+REPORT

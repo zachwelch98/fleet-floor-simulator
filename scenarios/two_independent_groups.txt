@@ -1,0 +1,19 @@
+# Three unrelated groups in one tick on a 6x6 floor: a head-on pair (R1/R2) blocked, a three-robot chain (R3..R5)
+# that advances, and a contest (R6 beats R7 for (4,4)).
+FLOOR 6,6
+PLACE R1 0,0,EAST
+PLACE R2 1,0,WEST
+PLACE R3 0,3,EAST
+PLACE R4 1,3,EAST
+PLACE R5 2,3,EAST
+PLACE R6 4,5,SOUTH
+PLACE R7 3,4,EAST
+QUEUE R1 MOVE
+QUEUE R2 MOVE
+QUEUE R3 MOVE
+QUEUE R4 MOVE
+QUEUE R5 MOVE
+QUEUE R6 MOVE
+QUEUE R7 MOVE
+TICK
+REPORT

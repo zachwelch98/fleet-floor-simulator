@@ -1,0 +1,11 @@
+# R1 and R2 are adjacent and facing each other, but R2 turns first (RIGHT) instead of moving, so R1's MOVE is blocked by an occupied cell.
+# Next tick R2 moves north out of the way and R1 follows it into the vacated cell.
+FLOOR 5,5
+PLACE R1 0,1,EAST
+PLACE R2 1,1,WEST
+QUEUE R1 MOVE MOVE
+QUEUE R2 RIGHT MOVE
+TICK
+REPORT
+TICK
+REPORT

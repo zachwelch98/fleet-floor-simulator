@@ -1,0 +1,7 @@
+# PLACE R1 onto its own current cell is allowed and changes its facing.
+FLOOR 5,5
+PLACE R1 2,2,NORTH
+PLACE R1 2,2,SOUTH
+QUEUE R1 MOVE
+TICK
+REPORT

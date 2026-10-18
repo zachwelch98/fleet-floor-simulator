@@ -1,0 +1,13 @@
+# QUEUE lines with an invalid GOTO target (off the floor, on an obstacle, negative, fractional) are ignored whole,
+# including the other commands on the same line. (No GOTO is executed in this scenario.)
+FLOOR 5,5
+OBSTACLE 3,3
+PLACE R1 0,0,EAST
+QUEUE R1 GOTO 5,5
+QUEUE R1 GOTO 3,3
+QUEUE R1 GOTO -1,0
+QUEUE R1 GOTO 1.5,2
+QUEUE R1 MOVE GOTO 9,9 LEFT
+QUEUE R1 MOVE
+TICK 3
+REPORT

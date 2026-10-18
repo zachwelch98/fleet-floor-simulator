@@ -1,0 +1,11 @@
+# PLACE on an existing robot moves it and KEEPS its queue (DECISIONS 4.4). The queued MOVE MOVE then runs from the new spot.
+FLOOR 5,5
+PLACE R1 0,0,EAST
+QUEUE R1 MOVE MOVE
+PLACE R1 0,2,NORTH
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT

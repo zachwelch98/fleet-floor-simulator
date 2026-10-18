@@ -1,0 +1,15 @@
+# Same layout as rotation_broken_by_lower_outsider but the outsider is R9 (higher number).
+# R4 wins the contest for (1,0), the loop rotates, and R9 stays.
+FLOOR 5,5
+PLACE R9 2,0,WEST
+PLACE R2 0,0,NORTH
+PLACE R3 0,1,EAST
+PLACE R4 1,1,SOUTH
+PLACE R5 1,0,WEST
+QUEUE R9 MOVE
+QUEUE R2 MOVE
+QUEUE R3 MOVE
+QUEUE R4 MOVE
+QUEUE R5 MOVE
+TICK
+REPORT

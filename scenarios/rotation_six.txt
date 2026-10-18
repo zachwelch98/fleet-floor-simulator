@@ -1,0 +1,17 @@
+# A closed loop of SIX robots around a 3x2 ring (clockwise), with scrambled robot numbers.
+# All six move one step. (Odd loops are impossible on a grid; loops have even length.)
+FLOOR 3,2
+PLACE R6 2,1,SOUTH
+PLACE R3 0,0,NORTH
+PLACE R1 1,1,EAST
+PLACE R5 1,0,WEST
+PLACE R4 0,1,EAST
+PLACE R2 2,0,WEST
+QUEUE R1 MOVE
+QUEUE R2 MOVE
+QUEUE R3 MOVE
+QUEUE R4 MOVE
+QUEUE R5 MOVE
+QUEUE R6 MOVE
+TICK
+REPORT

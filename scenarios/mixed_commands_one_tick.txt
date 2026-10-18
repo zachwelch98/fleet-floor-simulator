@@ -1,0 +1,17 @@
+# Every kind of outcome in a single tick: a move, a wall, a turn, a head-on pair, an idle robot, and a robot blocked by an idle one.
+FLOOR 5,5
+PLACE R1 0,0,NORTH
+PLACE R2 4,4,NORTH
+PLACE R3 2,2,NORTH
+PLACE R4 1,3,EAST
+PLACE R5 2,3,WEST
+PLACE R6 4,0,WEST
+PLACE R7 3,0,EAST
+QUEUE R1 MOVE
+QUEUE R2 MOVE
+QUEUE R3 LEFT
+QUEUE R4 MOVE
+QUEUE R5 MOVE
+QUEUE R7 MOVE
+TICK
+REPORT

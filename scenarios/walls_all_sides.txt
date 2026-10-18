@@ -1,0 +1,15 @@
+# Four robots on the middle of each edge of a 3x3 floor, facing out: the first MOVE hits the wall (and is used up).
+# Then RIGHT and MOVE walk each one along the edge to a corner.
+FLOOR 3,3
+PLACE R1 1,2,NORTH
+PLACE R2 2,1,EAST
+PLACE R3 1,0,SOUTH
+PLACE R4 0,1,WEST
+QUEUE R1 MOVE RIGHT MOVE
+QUEUE R2 MOVE RIGHT MOVE
+QUEUE R3 MOVE RIGHT MOVE
+QUEUE R4 MOVE RIGHT MOVE
+TICK
+REPORT
+TICK 2
+REPORT

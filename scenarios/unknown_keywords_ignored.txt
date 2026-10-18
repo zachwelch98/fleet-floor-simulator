@@ -1,0 +1,13 @@
+# Unknown keywords, near-miss keywords, a lone keyword and plain garbage are ignored; the valid lines between them still run.
+FLOOR 4,4
+JUMP R1 3,3
+FLOORS 3,3
+place
+R1 MOVE
+???
+PLACE R1 0,0,EAST
+MOVES R1
+QUEUE R1 MOVE
+TICKS 3
+TICK
+REPORT

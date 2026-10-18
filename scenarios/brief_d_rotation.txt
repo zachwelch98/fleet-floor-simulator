@@ -1,0 +1,11 @@
+# Brief example d: four robots in a 2x2 block moving clockwise. A closed loop: all four succeed.
+PLACE R1 0,0,NORTH
+PLACE R2 0,1,EAST
+PLACE R3 1,1,SOUTH
+PLACE R4 1,0,WEST
+QUEUE R1 MOVE
+QUEUE R2 MOVE
+QUEUE R3 MOVE
+QUEUE R4 MOVE
+TICK
+REPORT

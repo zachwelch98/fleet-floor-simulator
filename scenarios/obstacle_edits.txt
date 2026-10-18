@@ -1,0 +1,17 @@
+# OBSTACLE can be added mid-run. A duplicate is a no-op, off-floor ones and ones on a robot are ignored.
+# R1 moves to (1,0) then is blocked by the obstacle at (2,0); later it turns north and is stopped by a new obstacle at (1,2).
+FLOOR 5,5
+PLACE R1 0,0,EAST
+QUEUE R1 MOVE MOVE
+OBSTACLE 2,0
+OBSTACLE 2,0
+OBSTACLE 9,9
+OBSTACLE -1,0
+OBSTACLE 0,0
+TICK 2
+REPORT
+OBSTACLE 1,0
+QUEUE R1 LEFT MOVE MOVE
+OBSTACLE 1,2
+TICK 3
+REPORT

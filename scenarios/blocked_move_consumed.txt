@@ -1,0 +1,10 @@
+# A blocked MOVE is still used up: MOVE (into the west wall, blocked), RIGHT, MOVE. The robot does not retry the blocked MOVE.
+FLOOR 5,5
+PLACE R1 0,0,WEST
+QUEUE R1 MOVE RIGHT MOVE
+TICK
+REPORT
+TICK
+REPORT
+TICK
+REPORT

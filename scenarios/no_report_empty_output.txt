@@ -1,0 +1,8 @@
+# A scenario without any REPORT produces no output at all. Nothing but REPORT lines is ever written to stdout,
+# so this scenario's .expected file is empty.
+FLOOR 4,4
+PLACE R1 0,0,EAST
+QUEUE R1 MOVE MOVE
+TICK 2
+BOGUS LINE
+OBSTACLE 3,3

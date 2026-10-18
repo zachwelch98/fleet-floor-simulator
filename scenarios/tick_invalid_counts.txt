@@ -1,0 +1,14 @@
+# TICK needs a positive integer. TICK 0, TICK -1, TICK x and TICK 1.5 are ignored (nothing happens).
+# Then TICK 2 and TICK 1 run three of the queued MOVEs.
+FLOOR 5,5
+PLACE R1 0,0,EAST
+QUEUE R1 MOVE MOVE MOVE
+TICK 0
+TICK -1
+TICK x
+TICK 1.5
+REPORT
+TICK 2
+REPORT
+TICK 1
+REPORT
