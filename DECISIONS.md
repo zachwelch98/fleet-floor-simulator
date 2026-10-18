@@ -250,3 +250,6 @@ over REST.
   JSON-serializable and deep-equality is meaningful.
 - **TypeScript 6.0** is pinned repo-wide because Angular 22 requires `>=6.0 <6.1`.
 - **`@fleet/protocol` package** for REST/socket types, so the UI never imports from the API app.
+- **`.npmrc` sets `loglevel=silent`.** `npm run scenario -- file` otherwise prints npm's
+  `> script` banner to **stdout**, which would break exact-output grading. The trade-off is quieter
+  `npm install` output; errors from scripts still go to stderr.
