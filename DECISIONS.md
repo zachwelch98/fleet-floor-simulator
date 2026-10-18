@@ -172,7 +172,13 @@ On a robot: ignored (brief). On an existing obstacle: no-op.
 ### 4.10 GOTO syntax
 `QUEUE R1 GOTO 3,4` and it can be mixed: `QUEUE R1 MOVE GOTO 3,4 LEFT`.
 
-### 4.11 REPORT with no robots
+### 4.11 Comments and numbers
+Only lines whose first non-blank character is `#` are comments. A trailing `# ...` on a command
+line makes that line invalid (it is not stripped). Integers are plain decimal (`-?\d+`): `+3`,
+`1e3`, `0x1`, and `2.0` are invalid; leading zeros are fine (`TICK 007` = 7). `TICK` and `REPORT`
+with extra tokens are invalid.
+
+### 4.12 REPORT with no robots
 Prints `EMPTY` (brief). Output contains only REPORT lines; nothing else goes to stdout.
 
 ---
