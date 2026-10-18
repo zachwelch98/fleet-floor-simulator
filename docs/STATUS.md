@@ -31,7 +31,7 @@ phase gate. Commit it along with the work it describes.
 - [x] **Gate:** user approved contracts + decisions (2026-10-18)
 
 ### Phase 1: engine core (parallel)
-- [ ] Dev 1: geometry, reducer (all non-TICK actions), move resolution, TICK (GOTO execution deferred to Phase 2)
+- [x] Dev 1: geometry, reducer, move resolution, TICK, merged (GOTO hook `planGotoStep` in engine.ts throws until Phase 2)
 - [x] Dev 2: scenario parser/runner/CLI, merged 3d50466 (**pulled forward from Phase 2** so golden tests can pass at this gate)
 - [ ] Tester: engine unit tests, reference resolver + property tests, golden scenarios brief a–e + edge cases
 - [ ] Designer: UI spec in `docs/design/`
@@ -62,8 +62,8 @@ phase gate. Commit it along with the work it describes.
 | Role | Agent name/id | Worktree/branch | Status |
 |---|---|---|---|
 | Designer | a35ce8417110865b7 | auto worktree | P1 running: UI_SPEC.md + tokens.css |
-| Dev 1 Engine | a434bd38ee907bcef | auto worktree | P1 running: geometry, reducer, resolve-moves, tick |
-| Dev 2 Runner+API | a5454986fc9265830 | worktree-agent-a5454986fc9265830 | P1 done, merged. TODO after Dev 1 merge: drop parseRobotNum vi.mock in test/scenario-dev/parse.test.ts |
+| Dev 1 Engine | a434bd38ee907bcef | worktree-agent-a434bd38ee907bcef | P1 done, merged |
+| Dev 2 Runner+API | a5454986fc9265830 | worktree-agent-a5454986fc9265830 | P1 done, merged (mock removed) |
 | Dev 3 Frontend | n/a | n/a | not started (Phase 3) |
 | Tester | a05a5fb07ec04efec | auto worktree | P1 running: unit, property, golden suite |
 
@@ -89,3 +89,4 @@ Owned paths per role are listed in each brief (summarized in PLAN.md "Team and o
 - 2026-10-18: context map bootstrapped; Phase 0 committed. Brief PDF is gitignored (employer document, repo will be public).
 - 2026-10-18: Phase 0 gate approved. Phase 1 started: Dev 1, Dev 2 (runner pulled forward), Tester, Designer spawned in parallel worktrees (Sonnet).
 - 2026-10-18: Dev 2 runner merged (3d50466). ESLint now ignores .claude/** (it was linting agent worktrees).
+- 2026-10-18: Dev 1 engine merged; 164 dev tests green; CLI reproduces brief examples d and e. Prettier now enforced in verify (`format:check`). DECISIONS 2.7 added (grid geometry: min rotation 4, head-on follower is CONTESTED).
