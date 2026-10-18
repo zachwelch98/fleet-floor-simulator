@@ -4,11 +4,12 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/.angular/**', '**/coverage/**'],
+    ignores: ['**/dist/**', '**/node_modules/**', '**/.angular/**', '**/coverage/**', '.claude/**'],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    languageOptions: { parserOptions: { tsconfigRootDir: import.meta.dirname } },
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
