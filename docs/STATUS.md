@@ -11,7 +11,7 @@ phase gate. Commit it along with the work it describes.
 ## Current position
 
 - **Phase:** 1 (engine core), agents running
-- **Waiting on:** 4 background agents (Dev 1, Dev 2, Tester, Designer) to report
+- **Waiting on:** Tester (Dev 1, Dev 2, Designer merged)
 - **Next action:** as each reports: review the diff in its worktree, merge its branch into main in the order
   Dev 1 → Dev 2 → Tester → Designer, rescan the context map, run `npm run verify:fast`, triage
   failures (code or test wrong? decide from the spec and DECISIONS) and route fixes back to the same agent.
@@ -34,7 +34,7 @@ phase gate. Commit it along with the work it describes.
 - [x] Dev 1: geometry, reducer, move resolution, TICK, merged (GOTO hook `planGotoStep` in engine.ts throws until Phase 2)
 - [x] Dev 2: scenario parser/runner/CLI, merged 3d50466 (**pulled forward from Phase 2** so golden tests can pass at this gate)
 - [ ] Tester: engine unit tests, reference resolver + property tests, golden scenarios brief a–e + edge cases
-- [ ] Designer: UI spec in `docs/design/`
+- [x] Designer: UI spec + tokens merged (`docs/design/UI_SPEC.md`, `tokens.css`); PM answers appended to spec §12
 - [ ] PM: merge, triage, `verify:fast` green
 - [ ] **Gate**
 
@@ -61,7 +61,7 @@ phase gate. Commit it along with the work it describes.
 
 | Role | Agent name/id | Worktree/branch | Status |
 |---|---|---|---|
-| Designer | a35ce8417110865b7 | auto worktree | P1 running: UI_SPEC.md + tokens.css |
+| Designer | a35ce8417110865b7 | worktree-agent-a35ce8417110865b7 | P1 done, merged. Phase 3: reviews Dev 3's UI |
 | Dev 1 Engine | a434bd38ee907bcef | worktree-agent-a434bd38ee907bcef | P1 done, merged |
 | Dev 2 Runner+API | a5454986fc9265830 | worktree-agent-a5454986fc9265830 | P1 done, merged (mock removed) |
 | Dev 3 Frontend | n/a | n/a | not started (Phase 3) |
@@ -90,3 +90,4 @@ Owned paths per role are listed in each brief (summarized in PLAN.md "Team and o
 - 2026-10-18: Phase 0 gate approved. Phase 1 started: Dev 1, Dev 2 (runner pulled forward), Tester, Designer spawned in parallel worktrees (Sonnet).
 - 2026-10-18: Dev 2 runner merged (3d50466). ESLint now ignores .claude/** (it was linting agent worktrees).
 - 2026-10-18: Dev 1 engine merged; 164 dev tests green; CLI reproduces brief examples d and e. Prettier now enforced in verify (`format:check`). DECISIONS 2.7 added (grid geometry: min rotation 4, head-on follower is CONTESTED).
+- 2026-10-18: Designer spec merged. Protocol change: history query gains `limit` (newest-N when no `after`), HISTORY_DEFAULT_LIMIT 500 / MAX 2000.
