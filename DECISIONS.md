@@ -330,6 +330,18 @@ action, in commit (version) order. Rejected or malformed commands broadcast noth
 unknown floor acks `null` and joins no room (the protocol's ack type becomes `FloorDto | null`).
 A socket may be in several rooms; `floor:leave` for a room it is not in is a no-op.
 
+### 7.8 Play/join input details (chosen by Dev 2, accepted by the PM)
+- A fractional `intervalMs` is rounded to an integer, then clamped, so `FloorDto.intervalMs` is
+  always a whole number.
+- A missing, empty, `{}` or non-JSON (`text/plain`) Play body means "keep the current interval".
+  An array body or a non-finite `intervalMs` (string, null, boolean) is 400.
+- A `floor:join` whose payload is not an object with a string `floorId` acks `null`.
+- If a scheduled tick ever throws, that floor is paused (and `floor:playback` is broadcast)
+  instead of crashing the process. Not expected to happen: TICK is never rejected.
+- UI-side rulings from Phase 3 (selection, GOTO arming, key handling during an own PLACE,
+  remote-change toasts, playback adoption) live in `docs/design/UI_SPEC.md` (§3.2, 3.6, 5.1, 5.2),
+  updated after the Designer's review (`docs/design/UI_REVIEW.md`).
+
 ---
 
 ## 8. Engineering decisions
