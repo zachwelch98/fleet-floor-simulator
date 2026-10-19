@@ -342,6 +342,28 @@ The one-line text legend in the status line is replaced by a grouped visual key 
   sized without it and the already-scrolling grid column holds the key. From 1200px the status line
   is one banner line (30px); between 900 and 1199px, where a banner wraps next to the sidebar, it
   reserves two (50px). At 1280x720 a 20x20 floor's cells are 1px larger than before.
+- **Addendum (key column).** Under the floor the key pushed the scenario checkpoints below the
+  fold at 1280x720, so it moved to its own column. *(Supersedes "Placement" above and the hide-on-empty rule.)*
+  - **From 1200px: three columns**, key | grid + checkpoints | sidebar (`--key-w` 15rem, tokens.css).
+    The key column scrolls on its own, like the grid column. The three groups stack in it and every
+    entry wraps. The scenario checkpoints sit directly under the status line, with nothing between.
+  - **900-1199px: two columns**, as before. The key is in the grid column, **under the checkpoints**
+    (that column scrolls as one). A third column would not fit next to the 360px sidebar.
+  - **Under 900px (phone): stacked**, grid, checkpoints, key, sidebar.
+  - **One `<app-grid-legend>`**, rendered by the app shell inside `.main-col` after the grid column.
+    Below 1200px `.main-col` is a flex column. From 1200px it is `display: contents` and the key and
+    grid columns are placed by `grid-column`. No `matchMedia`, no second instance, so the open or
+    collapsed state cannot drift.
+  - **Collapsed, the key is a slim rail** (`--key-rail-w` 4.5rem, set with
+    `.layout:has(.key-col details:not([open]))`): "Key" and the codes on the floor as stacked pills.
+    The grid column takes the width back. The key reshapes itself with a container query (rail
+    pills at under 6rem), so it needs no knowledge of the breakpoint. The "Key · CT, BB on the
+    floor" text stays in the summary, visually hidden in the rail, for screen readers and tests.
+  - **The key shows on an empty floor too**, so the column never disappears and nothing jumps.
+  - **Grid sizing:** from 1200px `--grid-chrome-x` adds `--key-w` and one more gap, so cells shrink
+    to fit and never overflow (e2e checks a 20x20 floor from 390 to 1440px, key open and collapsed).
+    At 1280x720 and 1440x900 the 20x20 cells are unchanged (25.4px and 34.4px, both height-limited).
+    The key reserves nothing vertically.
 
 ---
 

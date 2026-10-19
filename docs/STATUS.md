@@ -27,6 +27,13 @@ phase gate. Commit it along with the work it describes.
   on the floor (`LEGEND_BADGES` in `core/copy.ts` is the single source; `.pill` is shared with the grid
   badges). `--grid-chrome-y` and the status-line min-heights recomputed. `e2e/tests/legend.spec.ts`.
   DECISIONS 5.9. Pending: PM review of screenshots and merge.
+- **Key column (2026-10-19, branch `worktree-agent-adabd0bff8dd17eac`, not merged):** the key moved
+  from under the grid to its own left column from 1200px (key | grid + checkpoints | sidebar);
+  under the checkpoints at 900-1199px and on a phone. One legend instance (`.main-col` wrapper,
+  `display: contents` from 1200px), `activeBadges` is now a `FloorStore` computed, collapsed key is a
+  4.5rem rail with stacked pills (container query), key shown on an empty floor. `--grid-chrome-x`
+  reserves the key column. No existing test changed; new specs in `layout.spec.ts` and
+  `legend.spec.ts` (verify green: web 167, e2e 119 + 1 skipped). DECISIONS 5.9 addendum. Pending: PM review of screenshots and merge.
 - **Test-infra note:** supertest opens one socket per request. Thousands of requests in quick
   succession can exhaust ephemeral ports (EADDRNOTAVAIL). Bulk setup should use
   `stepManyPooled` (keep-alive fetch) in `apps/api/test/support.ts`.
