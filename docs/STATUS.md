@@ -13,8 +13,8 @@ phase gate. Commit it along with the work it describes.
 - **State:** **Phase 3 in progress.** Phase 2 gate approved by the user. PM scaffold done
   (`apps/web` Angular 22.2, `e2e/` Playwright 1.64 + Chromium, root `npm run dev`,
   `TickTimer` contract, DECISIONS 7.5–7.7). Full `npm run verify` green incl. web unit + E2E smoke.
-- **Running:** Dev 2 (scheduler + gateway + play/pause), Dev 3 (Angular UI), Tester (real-time
-  integration + Playwright E2E). All Sonnet, each in its own worktree.
+- **Merged:** Dev 2 (scheduler + gateway + play/pause). **Running:** Dev 3 (Angular UI), Tester
+  (real-time integration + Playwright E2E). All Sonnet, each in its own worktree.
 - **Next action:** merge in order Dev 2 → Tester (real-time tests should go green) → Dev 3 →
   rerun E2E; triage failures. Then spawn the **Designer** to review the UI against the spec.
   Then the Phase 3 gate (full `verify`, 3 consecutive green runs).
@@ -107,7 +107,7 @@ The Tester was briefed with this list. Shared helpers already exist in
 
 ### Phase 3: real-time + UI (in progress)
 - [x] PM: scaffold `apps/web` (deps incl. socket.io-client), `e2e/` workspace (Playwright + Chromium, harness on :3100/:4300, smoke test), `scripts/dev.mjs`, `TickTimer`/`ManualTickTimer` contract + `AppOptions.timer`, DECISIONS 7.5–7.7, protocol: join acks `null` for unknown floor
-- [ ] Dev 2: `TickScheduler` (one timer per floor, injected timer for tests) + socket.io `FloorGateway` + `POST play|pause`. Hooks are ready: subscribe the gateway to `FloorsService.committed` (emits `{floor, history}` = `FloorUpdatedPayload`); the scheduler calls `FloorsService.step()`; fill `playing`/`intervalMs` in `FloorsService.toDto` (the only place a FloorDto is built). Register providers in `AppModule.register`.
+- [x] Dev 2: `TickScheduler` (one timer per floor via injected `TickTimer`), `PlaybackState` provider (breaks the DI cycle), `POST play|pause`, socket.io `FloorGateway` (raw `client.on` handlers so an unknown-floor join can ack `null`). 27 dev tests. PM smoke with the real timer on the built server: 10 ticks/s at 100 ms, versions contiguous, repeated Play silent, Pause stops.
 - [ ] Dev 3: Angular 22 app in `apps/web` per `docs/design/UI_SPEC.md` (test-id catalog in §10). The PM should scaffold `apps/web` and install all deps first (same reason as `apps/api`: no lockfile conflicts between parallel agents).
 - [ ] Tester: real-time integration tests (two socket.io clients; `socket.io-client` already installed) + Playwright E2E (Step only, no Play timing; Playwright **not yet installed**). Un-skip the pause test.
 - [ ] Designer: review the UI against the spec
@@ -122,14 +122,14 @@ The Tester was briefed with this list. Shared helpers already exist in
 
 ## Agents
 
-Running (2026-10-18, Sonnet, worktrees): **Dev 2**, **Dev 3**, **Tester** (Phase 3 briefs).
+Running (2026-10-18, Sonnet, worktrees): **Dev 3**, **Tester** (Phase 3 briefs). Dev 2 merged.
 Commits use the `GIT_AUTHOR_*`/`GIT_COMMITTER_*` env-var workaround (identity still unresolved).
 
 | Role | Last work | Notes for the next brief |
 |---|---|---|
 | Designer | UI spec + tokens (P1) | Phase 3: review Dev 3's UI against the spec |
 | Dev 1 Engine | GOTO (P2) | Engine is complete for Modules core + A |
-| Dev 2 Runner+API | P3 running: scheduler + gateway | |
+| Dev 2 Runner+API | P3 done: scheduler + gateway (merged) | Gaps it chose: fractional intervalMs rounded; tick error auto-pauses; text/plain body = {} |
 | Dev 3 Frontend | P3 running: Angular UI | |
 | Tester | P3 running: real-time + E2E | Its new tests fail on its own branch by design ("not implemented") |
 
@@ -166,3 +166,4 @@ Commits use the `GIT_AUTHOR_*`/`GIT_COMMITTER_*` env-var workaround (identity st
 - 2026-10-18: Dev 1 GOTO merged (DECISIONS 3.9). Dev 2 API merged (DECISIONS 6.1b/6.1c). PM end-to-end smoke OK.
 - 2026-10-18: **Paused by the user.** Tester wrapped up gracefully: GOTO tests + scenarios + api-boot merged; 677 engine tests green; pause test skipped (Phase 3). DECISIONS 3.10. All worktrees/branches removed. Git identity issue noted.
 - 2026-10-18: **Phase 2 gate approved.** PM Phase 3 scaffold (web, e2e, dev script, TickTimer contract, DECISIONS 7.5–7.7); verify green. Dev 2, Dev 3, Tester spawned.
+- 2026-10-18: Dev 2 merged (scheduler, play/pause, gateway); 216 API tests green; real-timer smoke OK. Worktree dirs can survive `git worktree remove` (ignored node_modules/.DS_Store): `rm -rf` then `git worktree prune`.
