@@ -99,8 +99,11 @@
   .grid-col {
     overflow: auto;
   }
+  /* Backstop: if the panes cannot all fit (short window), the sidebar scrolls as one column instead
+     of clipping Robots or History below the fold. Robots and History keep their minimums below. */
   .sidebar {
     min-height: 0;
+    overflow-y: auto;
   }
   /* UI_SPEC 1.1: Robots and History each get at least 200px; Robots takes at most 45%. */
   .robots-wrap {
