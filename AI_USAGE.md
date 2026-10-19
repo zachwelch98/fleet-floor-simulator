@@ -44,7 +44,7 @@ and why.
   agents' worktrees under `.claude/worktrees/`; they now ignore it. Prettier was not enforced
   (an agent noticed); it is now part of `verify`.
 
-### Phase 2: GOTO and the API (written by Claude as PM; to be reviewed)
+### Phase 2: GOTO and the API
 - **Independent agreement as evidence.** The GOTO tests (61) and GOTO scenarios (21) were written
   without access to the GOTO implementation, and vice versa. All passed against each other on the
   first merge. Both agents were working from DECISIONS section 3, so this confirms the code matches
@@ -56,7 +56,7 @@ and why.
   brief makes a GOTO robot give up behind another robot in a one-wide corridor (DECISIONS 3.9).
   It was kept, because it is literal and can't deadlock, and listed as future work.
 
-### Phase 2 (API tests) and Phase 3: real time and UI (drafted by Claude as PM; to be reviewed)
+### Phase 2 (API tests) and Phase 3: real time and UI
 - **A green mutation run that wasn't.** To check the 158 new API tests, ten bugs were injected into
   the API one at a time. The first five were caught normally. The next five each "failed 154
   tests", which looked like a strong result. But the identical count across unrelated bugs was
