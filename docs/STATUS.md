@@ -131,7 +131,7 @@ template in PLAN.md "Agent briefs" and the role details in PLAN.md "Team and orc
 | Dev 1 Engine | GOTO (P2) | Engine is complete for Modules core + A |
 | Dev 2 Runner+API | API + SQLite (P2) | Phase 3: TickScheduler + gateway; hooks listed above |
 | Dev 3 Frontend | not started | Phase 3 |
-| Tester | GOTO tests + api-boot (P2, paused) | Finish the "Remaining Phase 2 work" list first |
+| Tester | API integration tests (P2, done) | Phase 3: real-time + Playwright E2E; un-skip the pause test; use `stepManyPooled` for bulk setup |
 
 **Lessons from running agents (apply to future briefs):**
 - `npm install` in a worktree touches `package-lock.json` by one line. Tell agents to revert it and never commit it.
