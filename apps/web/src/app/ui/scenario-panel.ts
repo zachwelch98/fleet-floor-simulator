@@ -38,6 +38,13 @@ import type { RunView } from '../store/scenario.store';
             <option [value]="s.id" [selected]="s.id === selectedId()">{{ s.title }}</option>
           }
         </optgroup>
+        @if (uploaded().length > 0) {
+          <optgroup label="Uploaded">
+            @for (s of uploaded(); track s.id) {
+              <option [value]="s.id" [selected]="s.id === selectedId()">{{ s.title }}</option>
+            }
+          </optgroup>
+        }
       </select>
       <button
         type="button"
@@ -61,6 +68,67 @@ import type { RunView } from '../store/scenario.store';
       }
     </div>
 
+    <div class="files">
+      <button
+        type="button"
+        class="btn btn-small"
+        data-testid="btn-upload-scenario"
+        [disabled]="loading()"
+        (click)="scenarioFile.click()"
+      >
+        Upload scenario…
+      </button>
+      <input
+        #scenarioFile
+        type="file"
+        hidden
+        aria-label="Scenario file"
+        data-testid="input-upload-scenario"
+        (change)="chosen($event, 'scenario')"
+      />
+      @if (selectedIsUpload()) {
+        <button
+          type="button"
+          class="btn btn-small"
+          data-testid="btn-attach-expected"
+          [disabled]="loading()"
+          (click)="expectedFile.click()"
+        >
+          {{ hasExpected() ? 'Replace expected…' : 'Attach expected…' }}
+        </button>
+        <input
+          #expectedFile
+          type="file"
+          hidden
+          aria-label="Expected output file"
+          data-testid="input-upload-expected"
+          (change)="chosen($event, 'expected')"
+        />
+        <button
+          type="button"
+          class="btn btn-small btn-danger"
+          data-testid="btn-remove-upload"
+          [disabled]="loading()"
+          (click)="removeUpload.emit()"
+        >
+          Remove
+        </button>
+      }
+    </div>
+    @if (uploadError(); as err) {
+      <p class="error" role="alert" data-testid="upload-error">
+        {{ err }}
+        <button
+          type="button"
+          class="btn btn-small"
+          data-testid="btn-dismiss-upload-error"
+          (click)="dismissError.emit()"
+        >
+          Dismiss
+        </button>
+      </p>
+    }
+
     @if (run(); as r) {
       <p
         class="summary"
@@ -68,7 +136,13 @@ import type { RunView } from '../store/scenario.store';
         data-testid="scenario-summary"
         [attr.data-state]="summaryState()"
       >
-        {{ r.passed }} / {{ r.checkpoints.length }} passed
+        @if (r.refused) {
+          Not run live
+        } @else if (r.checkpoints.length === 0) {
+          No REPORT lines
+        } @else {
+          {{ r.passed }} / {{ r.checkpoints.length }} passed
+        }
       </p>
     }
   </section>`,
@@ -87,6 +161,19 @@ import type { RunView } from '../store/scenario.store';
     .pick {
       display: flex;
       flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+    .files {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+    .error {
+      font-size: var(--text-sm);
+      color: var(--color-danger);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
       gap: var(--space-2);
     }
     .select {
@@ -130,25 +217,57 @@ export class ScenarioPanel {
   readonly loading = input(false);
   readonly connected = input.required<boolean>();
   readonly run = input<RunView | null>(null);
+  readonly uploadError = input<string | null>(null);
 
   readonly select = output<string>();
   readonly load = output<void>();
   readonly reload = output<void>();
+  readonly uploadScenario = output<File>();
+  readonly attachExpected = output<File>();
+  readonly removeUpload = output<void>();
+  readonly dismissError = output<void>();
 
   protected readonly brief = computed(() => this.scenarios().filter((s) => s.group === 'brief'));
   protected readonly curated = computed(() =>
     this.scenarios().filter((s) => s.group === 'curated'),
+  );
+  protected readonly uploaded = computed(() =>
+    this.scenarios().filter((s) => s.group === 'uploaded'),
+  );
+  protected readonly selectedUpload = computed(() =>
+    this.uploaded().find((s) => s.id === this.selectedId()),
+  );
+  protected readonly selectedIsUpload = computed(() => this.selectedUpload() !== undefined);
+  protected readonly hasExpected = computed(
+    () => this.selectedUpload()?.expectedText !== undefined,
   );
   protected readonly summaryState = computed(() => {
     const r = this.run();
     if (!r) {
       return 'pending';
     }
+    if (r.refused) {
+      return 'pending';
+    }
     if (r.checkpoints.some((c) => c.status === 'fail')) {
       return 'failed';
     }
-    return r.complete ? 'passed' : 'pending';
+    return r.complete && r.checkpoints.length > 0 ? 'passed' : 'pending';
   });
+
+  protected chosen(event: Event, which: 'scenario' | 'expected'): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // the same file can be picked again
+    if (!file) {
+      return;
+    }
+    if (which === 'scenario') {
+      this.uploadScenario.emit(file);
+    } else {
+      this.attachExpected.emit(file);
+    }
+  }
 
   protected pick(event: Event): void {
     this.select.emit((event.target as HTMLSelectElement).value);

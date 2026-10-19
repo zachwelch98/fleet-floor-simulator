@@ -27,13 +27,13 @@
   </div>
   } @case ('ready') { @if (store.state(); as state) {
   <app-controls
-    [playing]="store.playing()"
+    [playing]="store.playing() || scenarios.stepping()"
     [intervalMs]="store.intervalMs()"
     [editMode]="store.editMode()"
     [connected]="store.connected()"
-    (step)="store.step()"
-    (play)="store.play()"
-    (pause)="store.pause()"
+    (step)="scenarios.step()"
+    (play)="scenarios.play()"
+    (pause)="scenarios.pause()"
     (intervalChange)="store.changeInterval($event)"
     (editModeChange)="store.setEditMode($event)"
     (openNewFloor)="newFloorOpen.set(true)"
@@ -75,14 +75,19 @@
 
     <aside class="sidebar">
       <app-scenario-panel
-        [scenarios]="scenarios.scenarios"
+        [scenarios]="scenarios.scenarios()"
         [selectedId]="scenarios.selectedId()"
         [loading]="scenarios.loading()"
         [connected]="store.connected()"
         [run]="scenarios.run()"
+        [uploadError]="scenarios.uploadError()"
         (select)="scenarios.select($event)"
         (load)="scenarios.load()"
         (reload)="scenarios.reload()"
+        (uploadScenario)="scenarios.importFile($event)"
+        (attachExpected)="scenarios.attachExpectedFile($event)"
+        (removeUpload)="scenarios.removeSelected()"
+        (dismissError)="scenarios.clearUploadError()"
       />
       <app-command-pad
         [selectedRobot]="store.selectedRobot()"
