@@ -262,6 +262,10 @@ export class GridLegend {
 
   protected onToggle(event: Event): void {
     const open = (event.target as HTMLDetailsElement).open;
+    if (open === this.open()) {
+      // The echo of our own `[open]` binding (the browser fires `toggle` for it too): nothing changed.
+      return;
+    }
     this.open.set(open);
     writeLegendOpen(open);
   }
