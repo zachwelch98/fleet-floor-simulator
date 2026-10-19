@@ -86,6 +86,25 @@ h3 {
   --o-line: var(--outcome-arrived-line);
 }
 
+/* Outcome pill: glyph + code on the outcome colors. Shared by the grid badges and the key, so the
+   key shows exactly what the floor draws. Size comes from --pill-size / --pill-line / --pill-gap. */
+.pill {
+  --pill-size: 9px;
+  --pill-line: 12px;
+  --pill-gap: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pill-gap);
+  padding: 0 3px;
+  border: 1px solid var(--o-line);
+  border-radius: var(--radius-pill);
+  background: var(--o-bg);
+  color: var(--o-fg);
+  font-size: var(--pill-size);
+  font-weight: 700;
+  line-height: var(--pill-line);
+}
+
 /* Buttons: native <button> with a shared look. */
 .btn {
   min-height: var(--control-height);
