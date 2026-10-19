@@ -1,0 +1,108 @@
+:host {
+  display: block;
+  min-height: 0;
+}
+.robots {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 100%;
+  overflow: auto;
+}
+.panel-title:focus-visible {
+  outline: var(--focus-ring);
+}
+.empty,
+p {
+  margin: 0;
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-border);
+  border-radius: var(--radius-1);
+  cursor: pointer;
+}
+.row[data-selected='true'] {
+  border-left: 3px solid var(--color-selected);
+  background: var(--color-surface-2);
+}
+.select {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-1);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--hue);
+  border: 1px solid var(--color-border-strong);
+}
+.tag {
+  margin-left: auto;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-selected);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+.queue {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  max-height: 7.5em;
+  overflow: auto;
+}
+.chip {
+  padding: 2px var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-1);
+  background: var(--color-surface-2);
+  font-size: var(--text-sm);
+}
+.chip[data-front='true'] {
+  border-width: 2px;
+  font-weight: 700;
+}
+.queue-empty,
+.last {
+  font-size: var(--text-sm);
+}
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+.del::before {
+  content: '🗑';
+}
+@media (min-width: 900px) {
+  .select {
+    min-height: 40px;
+  }
+}

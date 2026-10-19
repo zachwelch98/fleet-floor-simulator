@@ -1,0 +1,127 @@
+<div class="grid-scroll">
+  <div class="frame floor-grid" [style.--cols]="state().width" [style.--rows]="state().height">
+    <span class="title title-y" aria-hidden="true">y</span>
+    <div class="axis axis-y" aria-hidden="true">
+      @for (y of yLabels(); track y) {
+      <span class="ay" [attr.data-testid]="'axis-y-' + y">{{ y }}</span>
+      }
+    </div>
+    <div
+      class="floor-grid grid"
+      role="grid"
+      data-testid="floor-grid"
+      [attr.aria-label]="gridLabel()"
+      [attr.aria-disabled]="disabled() ? 'true' : null"
+      [attr.data-width]="state().width"
+      [attr.data-height]="state().height"
+      [attr.data-edit-mode]="editMode() ? 'true' : 'false'"
+      [attr.data-goto-armed]="gotoArmed() ? 'true' : 'false'"
+      [attr.data-disabled]="disabled() ? 'true' : 'false'"
+      (keydown)="onKeydown($event)"
+    >
+      @for (row of rows(); track row.y) {
+      <div class="row" role="row">
+        @for (c of row.cells; track c.x) {
+        <div
+          class="cell"
+          role="gridcell"
+          [attr.data-testid]="'cell-' + c.x + '-' + c.y"
+          [attr.data-x]="c.x"
+          [attr.data-y]="c.y"
+          [attr.data-obstacle]="c.obstacle ? 'true' : 'false'"
+          [attr.data-robot]="c.robot ? c.robot.id : null"
+          [attr.data-goto-target]="c.gotoAttr"
+          [attr.aria-label]="c.label"
+          [attr.aria-selected]="c.robotSelected ? 'true' : null"
+          [attr.tabindex]="tabindex(c)"
+          (click)="onCell(c, $event)"
+          (mousedown)="$event.preventDefault()"
+          (focus)="onFocus(c)"
+        >
+          @for (m of c.markers; track m.id) {
+          <span
+            class="goto"
+            [attr.data-testid]="'goto-target-' + m.id"
+            [attr.data-state]="m.state"
+            [attr.data-x]="m.x"
+            [attr.data-y]="m.y"
+            [attr.data-hue]="m.hue"
+            [attr.data-selected]="m.selected ? 'true' : 'false'"
+            [attr.title]="m.title"
+          >
+            <span class="goto-id">{{ m.id }}</span>
+          </span>
+          } @if (c.robot; as r) {
+          <div
+            class="robot"
+            [attr.data-testid]="'robot-' + r.id"
+            [attr.data-id]="r.id"
+            [attr.data-facing]="r.facing"
+            [attr.data-selected]="c.robotSelected ? 'true' : 'false'"
+            [attr.data-x]="r.x"
+            [attr.data-y]="r.y"
+            [attr.data-hue]="c.hue"
+            [attr.title]="c.robotTitle"
+          >
+            <svg
+              class="arrow"
+              viewBox="0 0 10 10"
+              aria-hidden="true"
+              focusable="false"
+              [style.transform]="'rotate(' + rotation[r.facing] + 'deg)'"
+            >
+              <polygon points="5,0.5 9.5,9 0.5,9" fill="currentColor" />
+            </svg>
+            <span class="rid"
+              ><span class="robot-id-prefix">R</span><span>{{ r.id.slice(1) }}</span></span
+            >
+          </div>
+          } @if (c.badge; as b) {
+          <span
+            class="badge"
+            [attr.data-testid]="'badge-' + b.id"
+            [attr.data-outcome]="b.outcome"
+            [attr.data-reason]="b.reason"
+            [attr.data-reached]="b.reached ? 'true' : null"
+            [attr.data-group]="b.group"
+            [attr.title]="b.title"
+          >
+            <span class="badge-glyph" aria-hidden="true">{{ b.glyph }}</span>
+            <span class="badge-text">{{ b.text }}</span>
+          </span>
+          }
+        </div>
+        }
+      </div>
+      }
+    </div>
+    <span class="title title-x" aria-hidden="true">x</span>
+    <div class="axis axis-x" aria-hidden="true">
+      @for (x of xLabels(); track x) {
+      <span class="ax" [attr.data-testid]="'axis-x-' + x">{{ x }}</span>
+      }
+    </div>
+  </div>
+</div>
+
+<div class="status-line">
+  @if (gotoArmed()) {
+  <p class="banner banner-goto" data-testid="goto-banner">
+    GOTO: click the cell {{ selectedId() }} should go to. Esc cancels.
+  </p>
+  } @else if (editMode()) {
+  <p class="banner banner-edit" data-testid="edit-banner">
+    Edit mode: click a cell to add or remove an obstacle. Robots can't be clicked here.
+  </p>
+  } @else if (empty()) {
+  <p class="hint muted" data-testid="grid-hint">
+    Click a cell to place a robot. Turn on Edit obstacles to draw walls.
+  </p>
+  } @else {
+  <p class="legend muted" data-testid="grid-legend">
+    ▲ robot (arrow = facing) · hatched = obstacle · ring = GOTO target (solid = heading there,
+    dashed = queued) · badge = last tick: WL wall, OB obstacle, CT contested, HO head-on, OC
+    occupied, BB blocked behind, WT waiting, UN unreachable, AR arrived, OK reached GOTO.
+  </p>
+  }
+</div>

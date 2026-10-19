@@ -1,0 +1,276 @@
+:host {
+  display: block;
+  min-width: 0;
+  /* Extra room for the "x" / "y" axis titles on top of the tokens.css chrome estimates. */
+  --title-size: 16px;
+  --grid-chrome-x: calc(2 * var(--space-4) + var(--axis-size) + var(--title-size));
+  --grid-chrome-y: calc(120px + var(--title-size));
+}
+
+@media (min-width: 900px) {
+  :host {
+    --grid-chrome-x: calc(
+      var(--sidebar-w) + var(--space-5) + 2 * var(--space-4) + var(--axis-size) + var(--title-size)
+    );
+    /* tokens.css estimate + axis title row + the legend's second line. */
+    --grid-chrome-y: calc(196px + var(--title-size) + 20px);
+  }
+}
+
+.grid-scroll {
+  max-width: 100%;
+  overflow: auto;
+}
+
+.frame {
+  display: grid;
+  grid-template-columns: var(--axis-size) auto var(--title-size);
+  grid-template-rows: var(--title-size) auto var(--axis-size);
+  width: max-content;
+}
+
+.title {
+  font-size: var(--text-xs);
+  font-style: italic;
+  color: var(--color-text-muted);
+  line-height: var(--title-size);
+}
+.title-y {
+  grid-area: 1 / 1;
+  text-align: center;
+}
+.title-x {
+  grid-area: 3 / 3;
+  padding-left: 3px;
+  line-height: var(--axis-size);
+}
+.axis {
+  display: flex;
+  color: var(--color-text-muted);
+  font-size: clamp(8px, calc(var(--cell-size) * 0.4), 12px);
+  font-variant-numeric: tabular-nums;
+}
+.axis-y {
+  grid-area: 2 / 1;
+  flex-direction: column;
+}
+.axis-x {
+  grid-area: 3 / 2;
+}
+.ay {
+  height: var(--cell-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--axis-size);
+}
+.ax {
+  width: var(--cell-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--axis-size);
+}
+
+.grid {
+  grid-area: 2 / 2;
+  display: block;
+  border-left: 1px solid var(--color-cell-line);
+  border-top: 1px solid var(--color-cell-line);
+}
+.grid[data-edit-mode='true'] {
+  outline: 2px dashed var(--color-edit);
+  outline-offset: 1px;
+  cursor: cell;
+}
+.grid[data-goto-armed='true'] {
+  cursor: crosshair;
+}
+.grid[data-disabled='true'] {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell-size));
+}
+
+.cell {
+  position: relative;
+  width: var(--cell-size);
+  height: var(--cell-size);
+  background: var(--color-cell);
+  border-right: 1px solid var(--color-cell-line);
+  border-bottom: 1px solid var(--color-cell-line);
+  container-type: inline-size;
+  user-select: none;
+  cursor: inherit;
+}
+.cell[data-obstacle='true'] {
+  background: var(--obstacle-hatch);
+}
+.cell[aria-selected='true'] {
+  z-index: 2;
+}
+.cell:hover {
+  outline: 2px solid var(--color-hover);
+  outline-offset: -2px;
+}
+.grid[data-edit-mode='false'] .cell[data-robot]:hover {
+  cursor: pointer;
+}
+
+/* Robot token */
+.robot {
+  position: absolute;
+  inset: 3px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border-radius: var(--radius-1);
+  background: var(--hue);
+  color: var(--robot-ink);
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  font-size: clamp(8px, 34cqw, 18px);
+}
+.arrow {
+  width: 38%;
+  height: 38%;
+  flex: none;
+}
+.rid {
+  display: inline-flex;
+}
+.robot[data-selected='true'] {
+  outline: 3px solid var(--color-selected);
+  outline-offset: 2px;
+  box-shadow: inset 0 0 0 2px var(--color-bg);
+}
+
+@container (max-width: 23.99px) {
+  .robot-id-prefix {
+    display: none;
+  }
+  .robot {
+    inset: 2px;
+  }
+}
+
+/* GOTO marker: solid = heading there, dashed = queued behind other commands */
+.goto {
+  position: absolute;
+  inset: 2px;
+  z-index: 1;
+  border: 2px solid var(--hue);
+  border-radius: var(--radius-1);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.goto + .goto {
+  inset: 5px;
+}
+.goto[data-state='pending'] {
+  border-style: dashed;
+}
+.goto[data-state='active']::after {
+  content: '+';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hue);
+  font-weight: 700;
+  font-size: clamp(8px, 50cqw, 20px);
+  line-height: 1;
+}
+.goto[data-selected='true'] {
+  border-width: 3px;
+  opacity: 1;
+}
+.goto-id {
+  position: absolute;
+  top: -1px;
+  left: 1px;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--hue);
+}
+@container (max-width: 23.99px) {
+  .goto-id {
+    display: none;
+  }
+}
+
+/* Last-tick badge */
+.badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 0 3px;
+  border: 1px solid var(--o-line);
+  border-radius: var(--radius-pill);
+  background: var(--o-bg);
+  color: var(--o-fg);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 12px;
+  pointer-events: auto;
+}
+@container (max-width: 23.99px) {
+  .badge {
+    width: 7px;
+    height: 7px;
+    padding: 0;
+    top: 0;
+    right: 0;
+    font-size: 0;
+  }
+  .badge-glyph,
+  .badge-text {
+    display: none;
+  }
+}
+
+/* Status line: always reserved so banners never resize the grid */
+.status-line {
+  min-height: 28px;
+  padding-top: var(--space-1);
+  font-size: var(--text-sm);
+}
+.status-line p {
+  margin: 0;
+}
+.banner {
+  display: inline-block;
+  padding: 2px var(--space-3);
+  border-radius: var(--radius-1);
+  font-weight: 600;
+}
+.banner-edit {
+  background: var(--color-edit-bg);
+  color: var(--color-edit-ink);
+  border: 1px solid var(--color-edit);
+}
+.banner-goto {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-focus);
+}
+
+@media (min-width: 900px) {
+  /* The legend wraps to two lines next to a 360px sidebar; reserve both so nothing shifts. */
+  .status-line {
+    min-height: 48px;
+  }
+}
