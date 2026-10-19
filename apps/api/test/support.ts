@@ -20,13 +20,15 @@ import {
   type HistoryEntry,
 } from '@fleet/protocol';
 import { createApp } from '../src/app.factory.js';
+import type { TickTimer } from '../src/tick-timer.js';
 
 /** The injected clock. Every HistoryEntry.at must equal FIXED_ISO. */
 export const FIXED_NOW = new Date('2026-01-01T00:00:00Z');
 export const FIXED_ISO = '2026-01-01T00:00:00.000Z';
 
-export function makeApp(dbPath = ':memory:'): Promise<INestApplication> {
-  return createApp({ dbPath, now: () => FIXED_NOW });
+/** `timer` replaces the Play timer (tests pass a `ManualTickTimer`); omitted, the app uses the real one. */
+export function makeApp(dbPath = ':memory:', timer?: TickTimer): Promise<INestApplication> {
+  return createApp({ dbPath, now: () => FIXED_NOW, ...(timer === undefined ? {} : { timer }) });
 }
 
 /** A unique database path under os.tmpdir(); remove it with `removeDb` (in afterEach). */
