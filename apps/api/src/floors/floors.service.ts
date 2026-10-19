@@ -4,10 +4,11 @@ import { Subject } from 'rxjs';
 import type { Observable } from 'rxjs';
 import { UI_DEFAULT_FLOOR, apply, createFloorState } from '@fleet/engine';
 import type { Action } from '@fleet/engine';
-import { DEFAULT_FLOOR_ID, DEFAULT_TICK_INTERVAL_MS } from '@fleet/protocol';
+import { DEFAULT_FLOOR_ID } from '@fleet/protocol';
 import type { CommandResponse, FloorDto, FloorUpdatedPayload, HistoryEntry } from '@fleet/protocol';
 import { FloorRepository } from './floor.repository.js';
 import type { HistoryQuery, LoadedFloor } from './floor.repository.js';
+import { PlaybackState } from '../realtime/playback-state.js';
 
 /** Injection token for the clock that stamps HistoryEntry.at. */
 export const CLOCK = Symbol('CLOCK');
@@ -37,6 +38,7 @@ export class FloorsService implements OnModuleInit, OnModuleDestroy {
   constructor(
     @Inject(FloorRepository) private readonly repository: FloorRepository,
     @Inject(CLOCK) private readonly now: Clock,
+    @Inject(PlaybackState) private readonly playback: PlaybackState,
   ) {}
 
   onModuleInit(): void {
@@ -143,17 +145,15 @@ export class FloorsService implements OnModuleInit, OnModuleDestroy {
     return floor;
   }
 
-  /**
-   * Phase 3 hook: playback is session state (DECISIONS 6.2), so it will come from the
-   * TickScheduler instead of these constants.
-   */
+  /** Playback is session state (DECISIONS 6.2), read from PlaybackState, never stored. */
   private toDto(floorId: string, loaded: LoadedFloor): FloorDto {
+    const { playing, intervalMs } = this.playback.get(floorId);
     return {
       id: floorId,
       version: loaded.version,
       state: loaded.state,
-      playing: false,
-      intervalMs: DEFAULT_TICK_INTERVAL_MS,
+      playing,
+      intervalMs,
     };
   }
 }

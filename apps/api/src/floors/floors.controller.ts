@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import type { Action } from '@fleet/engine';
 import type { CommandResponse, CommandSuccess, FloorDto, HistoryEntry } from '@fleet/protocol';
+import { TickScheduler } from '../realtime/tick-scheduler.js';
 import { FloorsService } from './floors.service.js';
 import { parseAction } from './parse-action.js';
 
@@ -30,7 +31,10 @@ function parseNonNegativeInt(name: string, raw: unknown): number | undefined {
 /** Global prefix '/api' is applied in createApp, so these routes are /api/floors/... */
 @Controller('floors')
 export class FloorsController {
-  constructor(@Inject(FloorsService) private readonly floors: FloorsService) {}
+  constructor(
+    @Inject(FloorsService) private readonly floors: FloorsService,
+    @Inject(TickScheduler) private readonly scheduler: TickScheduler,
+  ) {}
 
   @Get(':id')
   getFloor(@Param('id') id: string): FloorDto {
@@ -62,6 +66,41 @@ export class FloorsController {
   step(@Param('id') id: string): CommandSuccess {
     return orConflict(this.floors.step(id));
   }
+
+  /** Idempotent; session state only: no version bump, no history (DECISIONS 7.5). */
+  @Post(':id/play')
+  @HttpCode(200)
+  play(@Param('id') id: string, @Body() body: unknown): FloorDto {
+    this.floors.getFloor(id); // 404 before 400
+    this.scheduler.play(id, parseIntervalMs(body));
+    return this.floors.getFloor(id);
+  }
+
+  @Post(':id/pause')
+  @HttpCode(200)
+  pause(@Param('id') id: string): FloorDto {
+    this.floors.getFloor(id);
+    this.scheduler.pause(id);
+    return this.floors.getFloor(id);
+  }
+}
+
+/** PlayRequest body: absent/empty → undefined (keep the current interval); otherwise a number. */
+function parseIntervalMs(body: unknown): number | undefined {
+  if (body === undefined || body === null) {
+    return undefined;
+  }
+  if (typeof body !== 'object' || Array.isArray(body)) {
+    throw new BadRequestException('Body must be a JSON object like {"intervalMs": 500}');
+  }
+  const intervalMs = (body as Record<string, unknown>)['intervalMs'];
+  if (intervalMs === undefined) {
+    return undefined;
+  }
+  if (typeof intervalMs !== 'number' || !Number.isFinite(intervalMs)) {
+    throw new BadRequestException('"intervalMs" must be a number');
+  }
+  return intervalMs;
 }
 
 /** Engine rejection → 409 with the CommandRejected body (reason, message, authoritative floor). */
