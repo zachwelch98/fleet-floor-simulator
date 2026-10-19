@@ -107,7 +107,7 @@ export function shellName(fileName: string): string {
                 <p class="after">Live</p>
                 <pre
                   class="lines live"
-                  data-testid="checkpoint-live"
+                  data-testid="checkpoint-actual"
                   [class.differs]="c.status === 'fail'"
                   >{{ c.live.join(nl) }}</pre>
               }
