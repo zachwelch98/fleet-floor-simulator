@@ -10,10 +10,11 @@ phase gate. Commit it along with the work it describes.
 
 ## Current position (2026-10-18)
 
-- **State:** **Phase 3 work complete; awaiting the Phase 3 gate with the user.** Everything merged.
-  `npm run verify` green 3× in a row: 677 engine, 263 API (+1 todo: two floors), 73 web, 44 E2E.
-- **Next action:** Phase 3 gate. After approval: Phase 4 (CI workflow, README, DECISIONS/AI_USAGE
-  final pass, interview prep pack, public push only after the user confirms + git identity).
+- **State:** **Phase 4 done except the push.** Phase 3 gate approved. CI workflow, README, DECISIONS
+  and AI_USAGE passes committed; prep pack written (not committed).
+- **Blocked on the user:** (1) git identity / author email before the public push; (2) reword the
+  AI_USAGE entries marked "drafted by Claude"; (3) confirm the push (new public GitHub repo).
+  After the push: watch the first CI run and add the badge to the README.
 - **Test-infra note:** supertest opens one socket per request. Thousands of requests in quick
   succession can exhaust ephemeral ports (EADDRNOTAVAIL). Bulk setup should use
   `stepManyPooled` (keep-alive fetch) in `apps/api/test/support.ts`.
@@ -101,7 +102,7 @@ The Tester was briefed with this list. Shared helpers already exist in
 - [x] PM: API mutation spot-check: 10/10 caught (skip version check, skip snapshot upsert, 409→200, history order, `after` off-by-one, limit clamp 0, high-water mark, GOTO counter, version +2 on TICK, skip action log)
 - [x] **Gate** approved 2026-10-18
 
-### Phase 3: real-time + UI (awaiting gate)
+### Phase 3: real-time + UI ✅
 - [x] PM: scaffold `apps/web` (deps incl. socket.io-client), `e2e/` workspace (Playwright + Chromium, harness on :3100/:4300, smoke test), `scripts/dev.mjs`, `TickTimer`/`ManualTickTimer` contract + `AppOptions.timer`, DECISIONS 7.5–7.7, protocol: join acks `null` for unknown floor
 - [x] Dev 2: `TickScheduler` (one timer per floor via injected `TickTimer`), `PlaybackState` provider (breaks the DI cycle), `POST play|pause`, socket.io `FloorGateway` (raw `client.on` handlers so an unknown-floor join can ack `null`). 27 dev tests. PM smoke with the real timer on the built server: 10 ticks/s at 100 ms, versions contiguous, repeated Play silent, Pause stops.
 - [x] Dev 3: Angular UI per UI_SPEC (signal `FloorStore`, transport seam, all §10 test ids, 66 unit tests). First blind E2E run: 41/44; the 3 failures were test-side (2 key-before-selection races, 1 ambiguous locator), fixed by PM → 44/44
@@ -110,12 +111,12 @@ The Tester was briefed with this list. Shared helpers already exist in
 - [x] Dev 3 (fresh agent): all 15 review findings fixed (desktop scrollHeight 3332→768; 320px scrollWidth 323→320; toolbar shift on Play 182px→0), 73 web tests. PM reverted the dot-only phone connection badge (never color alone) and recorded rulings in UI_SPEC §12
 - [x] Root `npm run dev` (API + web together)
 - [x] Full `npm run verify` green 3 runs in a row (677 engine, 263 API + 1 todo, 73 web, 44 E2E); import boundaries checked
-- [ ] **Gate** (awaiting the user)
+- [x] **Gate** approved 2026-10-18
 
 ### Phase 4: finish
-- [ ] CI workflow (`npm ci && npx playwright install --with-deps chromium && npm run verify`); CI runs on Node 22
-- [ ] README (setup, run, scenario runner, modules + why, test strategy, real-time manual test plan, what's missing/cut), DECISIONS final pass, AI_USAGE final
-- [ ] Interview prep pack (not committed)
+- [x] CI workflow `.github/workflows/ci.yml` (Node 22, `npm ci`, Chromium, `npm run verify`, report artifact on failure). Not yet run on GitHub: the local Docker dry-run failed to start (daemon off); lockfile checked for Linux native packages + `npm ci --dry-run` OK
+- [x] README rewritten; DECISIONS final pass (6.1d single floor + kept history, §8 timer/socket notes); AI_USAGE Phase 2–3 entries **drafted by Claude, marked for the user to review/reword**
+- [x] Interview prep pack in `interview-prep/` (excluded via `.git/info/exclude`): PREP.md (walkthrough, Q&A, 8 live-change drills, debugging method, trade-offs) + `plant-bug.sh` (random planted bug in /tmp/fleet-drill, `--reveal`)
 - [ ] Push to a new public GitHub repo (**only after the user confirms**, and after the git identity question above)
 
 ## Agents
@@ -169,3 +170,4 @@ Commits use the `GIT_AUTHOR_*`/`GIT_COMMITTER_*` env-var workaround (identity st
 - 2026-10-18: Dev 3 merged. E2E 41/44 blind → 44/44 after 3 test fixes. Full verify green 3 runs in a row (flakiness check done; rerun after the Designer fixes).
 - 2026-10-18: Designer review merged (3 major: page scroll overflow from visually-hidden spans, slider keeps focus after grid click, cramped Robots panel). Dev 3 spawned for fixes. DECISIONS 7.8.
 - 2026-10-18: Dev 3 review fixes merged; PM kept the connection word on phones. Verify green 3×. Awaiting Phase 3 gate.
+- 2026-10-18: Phase 3 gate approved. Phase 4: CI, README, DECISIONS/AI_USAGE passes, prep pack. Awaiting the user for identity + push.
