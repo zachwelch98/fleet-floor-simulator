@@ -130,3 +130,114 @@ export async function stepMany(
 ): Promise<void> {
   for (let i = 0; i < n; i++) await mustStep(app, id);
 }
+
+/** The floor and its full history, read in one go (for "nothing changed" comparisons). */
+export async function snapshotOf(
+  app: INestApplication,
+  id = DEFAULT_FLOOR_ID,
+): Promise<{ floor: FloorDto; history: HistoryEntry[] }> {
+  return { floor: await getFloor(app, id), history: await getHistory(app, '', id) };
+}
+
+/** Sends an action the way the UI would: TICK through /step, everything else through /commands. */
+export function send(app: INestApplication, action: Action, id = DEFAULT_FLOOR_ID) {
+  return action.type === 'TICK' ? postStep(app, id) : post(app, action, id);
+}
+
+/** Sends every action, requiring each to be accepted; returns the last response body. */
+export async function mustOkAll(
+  app: INestApplication,
+  actions: readonly Action[],
+  id = DEFAULT_FLOOR_ID,
+): Promise<CommandSuccess | undefined> {
+  let last: CommandSuccess | undefined;
+  for (const action of actions) {
+    const res = await send(app, action, id);
+    if (res.status !== 200) {
+      throw new Error(
+        `expected ${JSON.stringify(action)} to be accepted, got ${res.status}: ${JSON.stringify(res.body)}`,
+      );
+    }
+    last = res.body as CommandSuccess;
+  }
+  return last;
+}
+
+const TICKS = (n: number): Action[] => Array.from({ length: n }, () => ({ type: 'TICK' }));
+
+/**
+ * A long, deterministic, mixed sequence on floor "main" for the persistence and consistency tests. Stages
+ * are sent in order; each is a natural checkpoint. Every action is accepted. Covers: gappy IDs (R2, R10),
+ * auto-ID, obstacle set/toggle (including a successful no-op), queues of every command kind, a GOTO that
+ * gives up (UNREACHABLE), head-on and contested moves, CLEAR_QUEUE, REMOVE_ROBOT, re-PLACE of an existing
+ * robot, and a CREATE_FLOOR in the middle.
+ */
+export const MIXED_STAGES: readonly (readonly Action[])[] = [
+  // 1. Gappy IDs and an auto-assigned one (R11), obstacles.
+  [
+    { type: 'PLACE_ROBOT', id: 'R2', x: 1, y: 1, facing: 'NORTH' },
+    { type: 'PLACE_ROBOT', id: 'R10', x: 5, y: 5, facing: 'WEST' },
+    { type: 'PLACE_ROBOT', x: 8, y: 2, facing: 'EAST' },
+    { type: 'SET_OBSTACLE', x: 3, y: 3, present: true },
+    { type: 'TOGGLE_OBSTACLE', x: 4, y: 4 },
+    { type: 'TOGGLE_OBSTACLE', x: 4, y: 4 },
+    { type: 'SET_OBSTACLE', x: 3, y: 3, present: true },
+    { type: 'TOGGLE_OBSTACLE', x: 6, y: 6 },
+  ],
+  // 2. Queues of every kind, then a burst of ticks.
+  [
+    {
+      type: 'QUEUE_COMMANDS',
+      id: 'R2',
+      commands: [
+        { kind: 'MOVE' },
+        { kind: 'RIGHT' },
+        { kind: 'MOVE' },
+        { kind: 'GOTO', x: 7, y: 1 },
+      ],
+    },
+    {
+      type: 'QUEUE_COMMANDS',
+      id: 'R10',
+      commands: [{ kind: 'MOVE' }, { kind: 'MOVE' }, { kind: 'LEFT' }],
+    },
+    { type: 'QUEUE_COMMANDS', id: 'R11', commands: [{ kind: 'GOTO', x: 2, y: 6 }] },
+    ...TICKS(6),
+  ],
+  // 3. Clear, remove, re-place, more ticks.
+  [
+    { type: 'CLEAR_QUEUE', id: 'R10' },
+    { type: 'REMOVE_ROBOT', id: 'R11' },
+    { type: 'QUEUE_COMMANDS', id: 'R2', commands: [{ kind: 'GOTO', x: 9, y: 7 }] },
+    ...TICKS(5),
+    { type: 'PLACE_ROBOT', id: 'R2', x: 0, y: 0, facing: 'EAST' },
+    ...TICKS(3),
+  ],
+  // 4. New floor mid-way (nextRobotNum starts over), a head-on pair, a contested cell, an unreachable GOTO.
+  [
+    { type: 'CREATE_FLOOR', width: 8, height: 6 },
+    { type: 'PLACE_ROBOT', id: 'R3', x: 0, y: 0, facing: 'NORTH' },
+    { type: 'PLACE_ROBOT', x: 4, y: 2, facing: 'EAST' },
+    { type: 'PLACE_ROBOT', x: 5, y: 2, facing: 'WEST' },
+    { type: 'PLACE_ROBOT', x: 2, y: 4, facing: 'EAST' },
+    { type: 'PLACE_ROBOT', x: 4, y: 4, facing: 'WEST' },
+    { type: 'QUEUE_COMMANDS', id: 'R4', commands: [{ kind: 'MOVE' }, { kind: 'MOVE' }] },
+    { type: 'QUEUE_COMMANDS', id: 'R5', commands: [{ kind: 'MOVE' }, { kind: 'MOVE' }] },
+    { type: 'QUEUE_COMMANDS', id: 'R6', commands: [{ kind: 'MOVE' }, { kind: 'MOVE' }] },
+    { type: 'QUEUE_COMMANDS', id: 'R7', commands: [{ kind: 'MOVE' }, { kind: 'MOVE' }] },
+    { type: 'SET_OBSTACLE', x: 6, y: 5, present: true },
+    { type: 'SET_OBSTACLE', x: 7, y: 4, present: true },
+    { type: 'QUEUE_COMMANDS', id: 'R3', commands: [{ kind: 'GOTO', x: 7, y: 5 }] },
+    ...TICKS(4),
+  ],
+  // 5. Tail: edits during activity, more ticks.
+  [
+    { type: 'REMOVE_ROBOT', id: 'R5' },
+    { type: 'TOGGLE_OBSTACLE', x: 7, y: 4 },
+    { type: 'QUEUE_COMMANDS', id: 'R3', commands: [{ kind: 'GOTO', x: 7, y: 5 }] },
+    { type: 'PLACE_ROBOT', x: 0, y: 5, facing: 'SOUTH' },
+    ...TICKS(5),
+  ],
+];
+
+export const MIXED_ACTIONS: readonly Action[] = MIXED_STAGES.flat();
