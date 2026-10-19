@@ -43,6 +43,7 @@ Open two tabs to see Module D: changes, ticks and Play/Pause sync live between t
 | GOTO | Shift-click a cell with a robot selected, or "GOTO…" then click a cell |
 | Toggle obstacles | turn on "Edit obstacles", then click cells |
 | Advance | Step (one tick), or Play / Pause with the interval slider |
+| Load a scenario | pick one under "Scenarios" (the five brief examples plus a few more) and press Load, then Play or Step: each `REPORT` shows as a checkpoint that turns ✓ or ✗, and Play stops after the last |
 | Clear a queue / delete a robot / new floor | buttons in the robot row / toolbar |
 | Cancel GOTO, then deselect | Esc |
 

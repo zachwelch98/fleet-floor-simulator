@@ -448,7 +448,7 @@ export class FloorStore {
   }
 
   /**
-   * Scenario picker (DECISIONS 8.8): pause, then send the setup actions one by one through the same
+   * Scenario picker (DECISIONS 5.7): pause, then send the setup actions one by one through the same
    * FIFO as every other command. Stops at the first refusal (a remote edit mid-load, offline, a
    * network error), so `ok` is true only when the whole setup was accepted. `version` and `tick`
    * are the floor held afterwards: the baseline the run is tracked from.

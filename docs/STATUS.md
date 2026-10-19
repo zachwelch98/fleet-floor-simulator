@@ -138,6 +138,9 @@ Commits use the `GIT_AUTHOR_*`/`GIT_COMMITTER_*` env-var workaround (identity st
 - Have the Tester code against stub contracts; expected failures should be "not implemented" only.
 - Use `${B}:path` (with braces) in zsh `git show`, because `$B:a…` is a zsh path modifier.
 
+### Extra: scenario picker (2026-10-19)
+- [x] Sidebar picker for the 5 brief examples + 5 curated scenarios: Load replays the setup through the normal command queue (`FloorStore.loadScenario`), checkpoints are read from `TICK_RESOLVED` history (`ScenarioStore`), auto-pause after the last. DECISIONS 5.7. Engine now exports `formatReport`; scenario files are bundled as text via the `loader` option in `apps/web/angular.json` (works for build, typecheck and `ng test`). Tests: 2 engine, 46 web unit, 4 E2E. No contract files changed.
+
 ## Deviations from PLAN.md
 
 - State uses plain sorted arrays (not Map/Set), so it is JSON-serializable and deep-comparable.
@@ -172,3 +175,4 @@ Commits use the `GIT_AUTHOR_*`/`GIT_COMMITTER_*` env-var workaround (identity st
 - 2026-10-18: Dev 3 review fixes merged; PM kept the connection word on phones. Verify green 3×. Awaiting Phase 3 gate.
 - 2026-10-18: Phase 3 gate approved. Phase 4: CI, README, DECISIONS/AI_USAGE passes, prep pack. Awaiting the user for identity + push.
 - 2026-10-19: Requirements audit. Fixed: `npm run scenario` failed on a relative path when run from any directory but the root (now resolves against INIT_CWD; 2 regression tests). Runner checked on Node 22/24/25, CRLF, no trailing newline, tabs, lowercase. Repo lives in an iCloud-synced Desktop: iCloud recreated deleted files as `name 2.ext` copies and broke `format:check`; deleted. Consider moving the repo off the Desktop.
+- 2026-10-19: Scenario picker added (engine `formatReport` export, `core/scenarios.ts`, `FloorStore.loadScenario`, `ScenarioStore`, `ui/scenario-panel.ts`, `e2e/tests/scenarios.spec.ts`, DECISIONS 5.7).

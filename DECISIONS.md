@@ -253,6 +253,31 @@ scenario grammar is unchanged. All go through the same engine reducer and appear
 Every event is stored. The UI groups events per tick (collapsible) and hides IDLE results by
 default, with a toggle to show them.
 
+### 5.7 Scenario picker: load by replaying the file's setup *(extra)*
+The sidebar can load one of the five brief examples or a few curated scenarios onto the shared
+floor, then Play or Step runs it and a checkpoint panel shows each `REPORT` turning into a pass or a
+fail. **Decision:** Load is a client-side sequence of ordinary actions (`CREATE_FLOOR`,
+`SET_OBSTACLE`, `PLACE_ROBOT` with explicit id and facing, `QUEUE_COMMANDS`) sent through the same
+FIFO as every other command. No new endpoint and no change to the engine or protocol contracts.
+*Why:* the server stays the only authority, other tabs see the floor reset and the setup arrive live
+(Module D), and the history shows exactly what happened.
+- **Implicit 5×5.** A file with no `FLOOR` line (brief b, c, d) gets `CREATE_FLOOR 5,5` first, the
+  scenario default (1.5), because the shared floor is normally 10×8.
+- **Setup only before the first `TICK`.** Play drives the ticks, so an action line after a `TICK`
+  cannot be injected mid-run; such a file fails to build (a unit test covers it). The curated list
+  avoids it. Lines the engine rejects are dropped, as the runner ignores them.
+- **Checkpoints come from the server's `TICK_RESOLVED` history:** the entry at load tick plus the
+  cumulative `TICK` count, read as `to` + `facing` per robot and printed with the runner's own
+  `formatReport`. The `.expected` file is split per `REPORT`, and a test checks it matches the
+  engine runner. Because results are matched by tick number, a missed socket frame or an extra tick
+  before the auto-pause lands changes nothing.
+- **Local to the tab.** The panel lives in the tab that pressed Load. A non-tick change after the
+  load flags the run "edited, results may not match"; a `FLOOR_CREATED` from elsewhere ends it.
+- **Auto-pause** after the last checkpoint resolves, once per run (Play pressed afterwards is left
+  alone).
+- **Bundling:** the files in `scenarios/` are imported as text through the esbuild `loader` option
+  in `apps/web/angular.json`, so the picker and the golden tests share one copy.
+
 ---
 
 ## 6. Persistence
