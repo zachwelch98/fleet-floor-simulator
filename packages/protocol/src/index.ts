@@ -90,6 +90,10 @@ export const SocketEvents = {
   Updated: 'floor:updated',
   /** server → room: play/pause/interval changed. */
   Playback: 'floor:playback',
+  /** client → server: the tab driving a scenario run shares its state (`ScenarioRunPayload`, DECISIONS 5.10). */
+  ScenarioPublish: 'scenario:publish',
+  /** server → room (the publisher excluded), and to a socket right after it joins: the shared run. */
+  Scenario: 'floor:scenario',
 } as const;
 
 export interface JoinPayload {
@@ -106,4 +110,33 @@ export interface PlaybackPayload {
   readonly floorId: string;
   readonly playing: boolean;
   readonly intervalMs: number;
+}
+
+/** Largest scenario `text` the server relays (the upload limit, DECISIONS 5.8). */
+export const MAX_SHARED_SCENARIO_CHARS = 64 * 1024;
+
+/**
+ * A scenario run as the driving tab holds it (DECISIONS 5.10). Inputs only: a watching tab rebuilds
+ * the scenario from `text` and works out the checkpoint results itself. The server relays it as is.
+ */
+export interface SharedScenarioRun {
+  readonly id: string;
+  readonly title: string;
+  readonly group: 'brief' | 'curated' | 'uploaded';
+  readonly fileName: string;
+  readonly text: string;
+  readonly expectedText?: string;
+  /** Too many ticks to run live; nothing was sent to the floor. */
+  readonly refused: boolean;
+  /** One entry per REPORT: the live lines captured so far, or null. */
+  readonly live: readonly (readonly string[] | null)[];
+  readonly halted: 'modified' | 'failed' | null;
+  /** Script steps played so far. */
+  readonly cursor: number;
+}
+
+export interface ScenarioRunPayload {
+  readonly floorId: string;
+  /** null: no run (it ended, or the tab driving it left). */
+  readonly run: SharedScenarioRun | null;
 }
