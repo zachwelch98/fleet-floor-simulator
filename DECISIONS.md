@@ -309,6 +309,27 @@ Allowed. They are serialized between ticks the same way.
 Every broadcast carries the floor version. A client that sees a version gap reloads the floor
 over REST.
 
+### 7.5 Play and pause are session state, not actions **[gap]**
+`POST play|pause` never bumps the floor version and never writes history (consistent with 6.2).
+They broadcast `floor:playback` to the room only when `playing` or `intervalMs` actually changes;
+a repeated Play with the same interval (or a repeated Pause) is a silent no-op that still returns
+200 with the current FloorDto. Play while playing with a *different* interval restarts the one
+timer at the new interval. `intervalMs` is clamped to `[MIN_TICK_INTERVAL_MS, MAX_TICK_INTERVAL_MS]`;
+a non-number `intervalMs` (or a non-object body) is 400. An omitted body means "current interval".
+`intervalMs` is kept per floor while paused, so the next Play without a value reuses it; it resets
+to `DEFAULT_TICK_INTERVAL_MS` on restart (6.2).
+
+### 7.6 Ticks from Play are ordinary commits
+Each timer firing calls the same `step` as `POST /step`: one TICK action, version +1, history, and
+one `floor:updated` broadcast. `POST /step` is still accepted while playing (the UI disables its
+button, the server does not refuse it; 7.3). `CREATE_FLOOR` while playing keeps playing.
+
+### 7.7 Broadcast rules
+`floor:updated` goes to every socket in the floor's room, the sender's included, once per committed
+action, in commit (version) order. Rejected or malformed commands broadcast nothing. Joining an
+unknown floor acks `null` and joins no room (the protocol's ack type becomes `FloorDto | null`).
+A socket may be in several rooms; `floor:leave` for a room it is not in is a no-op.
+
 ---
 
 ## 8. Engineering decisions

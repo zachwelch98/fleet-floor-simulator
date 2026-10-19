@@ -82,7 +82,7 @@ export interface PlayRequest {
 // ---------------------------------------------------------------------------
 
 export const SocketEvents = {
-  /** client → server: subscribe to a floor's room. Ack: FloorDto. */
+  /** client → server: subscribe to a floor's room. Ack: FloorDto, or null for an unknown floor (DECISIONS 7.7). */
   Join: 'floor:join',
   /** client → server */
   Leave: 'floor:leave',

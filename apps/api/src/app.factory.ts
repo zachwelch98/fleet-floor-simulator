@@ -3,6 +3,7 @@ import type { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { API_PREFIX } from '@fleet/protocol';
 import { AppModule } from './app.module.js';
+import type { TickTimer } from './tick-timer.js';
 
 /**
  * Contract between Dev 2 (implements) and the Tester (uses in integration tests).
@@ -13,6 +14,12 @@ export interface AppOptions {
   readonly dbPath: string;
   /** Clock for HistoryEntry.at timestamps. Defaults to () => new Date(). Tests inject a fixed clock. */
   readonly now?: () => Date;
+  /**
+   * Timer behind Play (one interval per playing floor). Defaults to `realTickTimer`. Tests inject a
+   * `ManualTickTimer` (apps/api/src/tick-timer.ts) and call `fire()` instead of waiting.
+   * Phase 3: Dev 2 wires this into AppModule.register and the TickScheduler.
+   */
+  readonly timer?: TickTimer;
 }
 
 /** The dev UI (ng serve) origin allowed by CORS. */
