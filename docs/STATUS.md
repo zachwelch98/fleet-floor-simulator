@@ -171,3 +171,4 @@ Commits use the `GIT_AUTHOR_*`/`GIT_COMMITTER_*` env-var workaround (identity st
 - 2026-10-18: Designer review merged (3 major: page scroll overflow from visually-hidden spans, slider keeps focus after grid click, cramped Robots panel). Dev 3 spawned for fixes. DECISIONS 7.8.
 - 2026-10-18: Dev 3 review fixes merged; PM kept the connection word on phones. Verify green 3×. Awaiting Phase 3 gate.
 - 2026-10-18: Phase 3 gate approved. Phase 4: CI, README, DECISIONS/AI_USAGE passes, prep pack. Awaiting the user for identity + push.
+- 2026-10-19: Requirements audit. Fixed: `npm run scenario` failed on a relative path when run from any directory but the root (now resolves against INIT_CWD; 2 regression tests). Runner checked on Node 22/24/25, CRLF, no trailing newline, tabs, lowercase. Repo lives in an iCloud-synced Desktop: iCloud recreated deleted files as `name 2.ext` copies and broke `format:check`; deleted. Consider moving the repo off the Desktop.
