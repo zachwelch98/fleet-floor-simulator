@@ -168,4 +168,4 @@ Commits use the `GIT_AUTHOR_*`/`GIT_COMMITTER_*` env-var workaround (identity st
 - 2026-10-18: **Phase 2 gate approved.** PM Phase 3 scaffold (web, e2e, dev script, TickTimer contract, DECISIONS 7.5–7.7); verify green. Dev 2, Dev 3, Tester spawned.
 - 2026-10-18: Dev 2 merged (scheduler, play/pause, gateway); 216 API tests green; real-timer smoke OK. Worktree dirs can survive `git worktree remove` (ignored node_modules/.DS_Store): `rm -rf` then `git worktree prune`.
 - 2026-10-18: Tester merged: 46 real-time tests green vs the real gateway first time; 43 E2E specs pending Dev 3.
-- 2026-10-18: Dev 3 merged. E2E 41/44 blind → 44/44 after 3 test fixes. Full verify green (run 1 of 3).
+- 2026-10-18: Dev 3 merged. E2E 41/44 blind → 44/44 after 3 test fixes. Full verify green 3 runs in a row (flakiness check done; rerun after the Designer fixes).
