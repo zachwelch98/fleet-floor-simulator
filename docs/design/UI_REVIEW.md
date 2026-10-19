@@ -1,6 +1,6 @@
 # UI review: Fleet Floor Simulator (Angular UI, Dev 3)
 
-Reviewed against `UI_SPEC.md` on branch `worktree-agent-a11f0bd2919eec1d8` (base `28fc5ee`). I ran the
+Reviewed against `UI_SPEC.md` on branch `worktree-agent-a11f0bd2919eec1d8` (base `17913aa`). I ran the
 API and `ng serve` on ports 3400/4500 and drove them with Playwright at 1366×768 and 375×812 (plus 320),
 light and dark, with 10×8, 3×3 and 20×20 floors, 17 robots, every last-tick badge outcome, edit mode,
 GOTO armed, offline, reconnecting, the New floor dialog, toasts, two tabs, and a keyboard-only pass.
