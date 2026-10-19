@@ -598,3 +598,82 @@ describe('FloorStore playback', () => {
     expect(ctx.api.play).toHaveBeenLastCalledWith(900);
   });
 });
+
+describe('FloorStore loadScenario', () => {
+  const SETUP: Action[] = [
+    { type: 'CREATE_FLOOR', width: 5, height: 5 },
+    { type: 'PLACE_ROBOT', id: 'R1', x: 0, y: 0, facing: 'EAST' },
+    { type: 'QUEUE_COMMANDS', id: 'R1', commands: [{ kind: 'MOVE' }] },
+  ];
+
+  /** Every send is accepted and bumps the version by one. */
+  function acceptAll(ctx: ReturnType<typeof setup>): Action[] {
+    const sent: Action[] = [];
+    ctx.api.sendAction.mockImplementation(async (a) => {
+      sent.push(a);
+      const version = 1 + sent.length;
+      return success(floorDto({ version, state: floorState({ tick: 0 }) }), [
+        entry(version, { type: 'FLOOR_CREATED', width: 5, height: 5 }),
+      ]);
+    });
+    return sent;
+  }
+
+  it('sends the setup in order and resolves with the version and tick held afterwards', async () => {
+    const ctx = setup();
+    await ready(ctx);
+    const sent = acceptAll(ctx);
+    expect(await ctx.store.loadScenario(SETUP)).toEqual({ ok: true, version: 4, tick: 0 });
+    expect(sent).toEqual(SETUP);
+    expect(ctx.api.pause).not.toHaveBeenCalled();
+  });
+
+  it('pauses first when the floor is playing, before the first action', async () => {
+    const ctx = setup(floorDto({ playing: true }));
+    await ready(ctx);
+    const order: string[] = [];
+    ctx.api.pause.mockImplementation(async () => {
+      order.push('pause');
+      return floorDto({ playing: false });
+    });
+    ctx.api.sendAction.mockImplementation(async (a) => {
+      order.push(a.type);
+      return success(floorDto({ version: 2 }), []);
+    });
+    await ctx.store.loadScenario(SETUP.slice(0, 1));
+    expect(order).toEqual(['pause', 'CREATE_FLOOR']);
+  });
+
+  it('sends nothing when the pause fails, because the floor is still ticking', async () => {
+    const ctx = setup(floorDto({ playing: true }));
+    await ready(ctx);
+    ctx.api.pause.mockRejectedValue(new Error('down'));
+    expect((await ctx.store.loadScenario(SETUP)).ok).toBe(false);
+    expect(ctx.api.sendAction).not.toHaveBeenCalled();
+  });
+
+  it('stops at the first rejection and reports failure', async () => {
+    const ctx = setup();
+    await ready(ctx);
+    const sent: Action[] = [];
+    ctx.api.sendAction.mockImplementation(async (a) => {
+      sent.push(a);
+      return sent.length === 2
+        ? rejected('CELL_OCCUPIED', floorDto({ version: 3 }))
+        : success(floorDto({ version: 2 }), []);
+    });
+    const result = await ctx.store.loadScenario(SETUP);
+    expect(result.ok).toBe(false);
+    expect(sent).toHaveLength(2);
+    expect(lastToast(ctx.toasts)!.reason).toBe('CELL_OCCUPIED');
+  });
+
+  it('sends nothing while offline and shows the OFFLINE toast', async () => {
+    const ctx = setup();
+    await ctx.store.init();
+    ctx.store.connection.set('disconnected');
+    expect((await ctx.store.loadScenario(SETUP)).ok).toBe(false);
+    expect(ctx.api.sendAction).not.toHaveBeenCalled();
+    expect(lastToast(ctx.toasts)!.reason).toBe('OFFLINE');
+  });
+});

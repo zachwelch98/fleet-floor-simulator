@@ -447,6 +447,33 @@ export class FloorStore {
     return (await this.submit({ type: 'CREATE_FLOOR', width, height })) !== null;
   }
 
+  /**
+   * Scenario picker (DECISIONS 8.8): pause, then send the setup actions one by one through the same
+   * FIFO as every other command. Stops at the first refusal (a remote edit mid-load, offline, a
+   * network error), so `ok` is true only when the whole setup was accepted. `version` and `tick`
+   * are the floor held afterwards: the baseline the run is tracked from.
+   */
+  async loadScenario(
+    setup: readonly Action[],
+  ): Promise<{ ok: boolean; version: number; tick: number }> {
+    let ok = this.connected();
+    if (!ok) {
+      this.toastClient('OFFLINE');
+    }
+    if (ok && this.playing()) {
+      await this.pause();
+      ok = !this.playing(); // the pause failed (it toasts): do not reset a floor that is still ticking
+    }
+    for (const action of setup) {
+      if (!ok) {
+        break;
+      }
+      ok = (await this.submit(action)) !== null;
+    }
+    const floor = this.floor();
+    return { ok, version: floor?.version ?? 0, tick: floor?.state.tick ?? 0 };
+  }
+
   async step(): Promise<void> {
     const result = await this.submit(null);
     const tick = result?.history.find((e) => e.event.type === 'TICK_RESOLVED');
