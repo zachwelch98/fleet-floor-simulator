@@ -83,6 +83,25 @@ export function postStep(app: INestApplication, id = DEFAULT_FLOOR_ID) {
     .send();
 }
 
+/**
+ * POST /step `count` times over one pooled keep-alive connection (global fetch). supertest opens a new
+ * socket per request, and a few thousand of those in a row leave enough TIME_WAIT sockets to exhaust the
+ * ephemeral port range when the suite is rerun quickly (EADDRNOTAVAIL). Starts a loopback listener.
+ */
+export async function stepManyPooled(
+  app: INestApplication,
+  count: number,
+  id = DEFAULT_FLOOR_ID,
+): Promise<void> {
+  await listenOnLoopback(app);
+  const url = `${await app.getUrl()}${floorPath(id)}/step`;
+  for (let i = 0; i < count; i++) {
+    const res = await fetch(url, { method: 'POST' });
+    await res.arrayBuffer();
+    if (res.status !== 200) throw new Error(`step ${i} -> ${res.status}`);
+  }
+}
+
 /** POST an action that must be accepted (200, ok: true). */
 export async function mustOk(
   app: INestApplication,

@@ -20,6 +20,7 @@ import {
   FIXED_ISO,
   getFloor,
   getHistory,
+  stepManyPooled,
   http,
   makeApp,
   mustOk,
@@ -290,10 +291,7 @@ describe('history: default and maximum limits', () => {
   beforeAll(async () => {
     app = await makeApp();
     const steps = HISTORY_MAX_LIMIT + 100;
-    for (let i = 0; i < steps; i++) {
-      const res = await postStep(app);
-      if (res.status !== 200) throw new Error(`step ${i} -> ${res.status}`);
-    }
+    await stepManyPooled(app, steps);
     // Total entries, counted through paging so nothing here depends on the limit clamp itself.
     total = 0;
     let cursor = 0;
