@@ -14,7 +14,7 @@ phase gate. Commit it along with the work it describes.
   (`apps/web` Angular 22.2, `e2e/` Playwright 1.64 + Chromium, root `npm run dev`,
   `TickTimer` contract, DECISIONS 7.5–7.7). Full `npm run verify` green incl. web unit + E2E smoke.
 - **Merged:** Dev 2, Tester, Dev 3. Full `npm run verify` green: 677 engine, 263 API (+1 todo),
-  66 web, 44 E2E. **Next:** Designer review of the UI, then fixes, then the gate. All Sonnet, each in its own worktree.
+  66 web, 44 E2E. **Next:** Dev 3 fixes from UI_REVIEW.md (running), then verify ×3, then the gate. All Sonnet, each in its own worktree.
 - **Next action:** merge in order Dev 2 → Tester (real-time tests should go green) → Dev 3 →
   rerun E2E; triage failures. Then spawn the **Designer** to review the UI against the spec.
   Then the Phase 3 gate (full `verify`, 3 consecutive green runs).
@@ -110,7 +110,8 @@ The Tester was briefed with this list. Shared helpers already exist in
 - [x] Dev 2: `TickScheduler` (one timer per floor via injected `TickTimer`), `PlaybackState` provider (breaks the DI cycle), `POST play|pause`, socket.io `FloorGateway` (raw `client.on` handlers so an unknown-floor join can ack `null`). 27 dev tests. PM smoke with the real timer on the built server: 10 ticks/s at 100 ms, versions contiguous, repeated Play silent, Pause stops.
 - [x] Dev 3: Angular UI per UI_SPEC (signal `FloorStore`, transport seam, all §10 test ids, 66 unit tests). First blind E2E run: 41/44; the 3 failures were test-side (2 key-before-selection races, 1 ambiguous locator), fixed by PM → 44/44
 - [x] Tester: `api-realtime.test.ts` (46 tests + 1 todo: two floors not creatable via protocol), pause test un-skipped; **all green against Dev 2's gateway on first merge**. 43 Playwright specs in 4 files written blind to the UI (run after Dev 3 merges)
-- [ ] Designer: review the UI against the spec
+- [x] Designer: `docs/design/UI_REVIEW.md` (0 blocker, 3 major, 7 minor, 5 polish; 8 screenshots), UI_SPEC updated with rulings on Dev 3's deviations
+- [ ] Dev 3 (fresh agent): fix all major/minor (+ cheap polish) from UI_REVIEW.md
 - [x] Root `npm run dev` (API + web together)
 - [ ] **Gate:** full `npm run verify` green
 
@@ -122,12 +123,12 @@ The Tester was briefed with this list. Shared helpers already exist in
 
 ## Agents
 
-Running: **Designer** (UI review). Dev 2, Tester, Dev 3 merged.
+Running: **Dev 3** (UI review fixes, fresh agent). Designer review merged.
 Commits use the `GIT_AUTHOR_*`/`GIT_COMMITTER_*` env-var workaround (identity still unresolved).
 
 | Role | Last work | Notes for the next brief |
 |---|---|---|
-| Designer | UI spec + tokens (P1) | Phase 3: review Dev 3's UI against the spec |
+| Designer | P3 done: UI review (merged) | Could re-check the fixes at the gate if wanted |
 | Dev 1 Engine | GOTO (P2) | Engine is complete for Modules core + A |
 | Dev 2 Runner+API | P3 done: scheduler + gateway (merged) | Gaps it chose: fractional intervalMs rounded; tick error auto-pauses; text/plain body = {} |
 | Dev 3 Frontend | P3 done: Angular UI (merged) | 12 spec gaps listed in its report; see DECISIONS at gate |
@@ -169,3 +170,4 @@ Commits use the `GIT_AUTHOR_*`/`GIT_COMMITTER_*` env-var workaround (identity st
 - 2026-10-18: Dev 2 merged (scheduler, play/pause, gateway); 216 API tests green; real-timer smoke OK. Worktree dirs can survive `git worktree remove` (ignored node_modules/.DS_Store): `rm -rf` then `git worktree prune`.
 - 2026-10-18: Tester merged: 46 real-time tests green vs the real gateway first time; 43 E2E specs pending Dev 3.
 - 2026-10-18: Dev 3 merged. E2E 41/44 blind → 44/44 after 3 test fixes. Full verify green 3 runs in a row (flakiness check done; rerun after the Designer fixes).
+- 2026-10-18: Designer review merged (3 major: page scroll overflow from visually-hidden spans, slider keeps focus after grid click, cramped Robots panel). Dev 3 spawned for fixes. DECISIONS 7.8.
