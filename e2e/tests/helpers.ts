@@ -1,6 +1,6 @@
 /**
  * Shared helpers for the E2E specs. Test ids come from docs/design/UI_SPEC.md section 10; copy strings come
- * from sections 5.5 and 7.4. The specs only ever press Step, never Play (no timing).
+ * from sections 5.5 and 7.4. The specs press Step, not Play (no timing); scenarios.spec.ts is the one exception.
  */
 import { expect, type APIRequestContext, type Locator, type Page } from '@playwright/test';
 import type { Action } from '@fleet/engine';

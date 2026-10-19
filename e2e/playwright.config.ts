@@ -4,7 +4,7 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * E2E harness (PM scaffold). Starts the built API on :3100 with a fresh SQLite file and the web dev
  * server on :4300 proxying to it. One worker and one shared server, so specs must not rely on another
- * spec's floor: reset with a CREATE_FLOOR at the start of each test. Step only, never Play timing.
+ * spec's floor: reset with a CREATE_FLOOR at the start of each test. Step only, never Play timing (scenarios.spec.ts presses Play once and waits for the panel's result).
  * Retries are off on purpose: a flaky test should fail loudly.
  */
 const API_PORT = 3100;
