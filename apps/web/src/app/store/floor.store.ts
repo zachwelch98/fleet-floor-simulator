@@ -11,6 +11,8 @@ import {
   type FloorUpdatedPayload,
   type HistoryEntry,
   type PlaybackPayload,
+  type ScenarioRunPayload,
+  type SharedScenarioRun,
 } from '@fleet/protocol';
 import {
   CLIENT_MESSAGES,
@@ -79,6 +81,8 @@ export class FloorStore {
   readonly history = signal<readonly HistoryEntry[]>([]);
   readonly connection = signal<ConnectionState>('reconnecting');
   readonly loadState = signal<LoadState>('loading');
+  /** A scenario run driven from another tab, as it last shared it (DECISIONS 5.10). */
+  readonly remoteScenario = signal<SharedScenarioRun | null>(null);
 
   // --- UI state -------------------------------------------------------------
   readonly selectedId = signal<RobotId | null>(null);
@@ -120,6 +124,8 @@ export class FloorStore {
   private resyncing = false;
   private resyncAgain = false;
   private intervalTimer: ReturnType<typeof setTimeout> | null = null;
+  /** The run this tab last shared; sent again after a reconnect (the server drops it on disconnect). */
+  private publishedScenario: SharedScenarioRun | null = null;
 
   // =========================================================================
   // Loading, socket, catch-up
@@ -150,14 +156,20 @@ export class FloorStore {
       onGiveUp: () => this.connection.set('disconnected'),
       onUpdated: (payload: FloorUpdatedPayload) => this.onUpdated(payload),
       onPlayback: (payload: PlaybackPayload) => this.onPlayback(payload),
+      onScenario: (payload: ScenarioRunPayload) => this.onScenario(payload),
     });
   }
 
   private async onSocketConnect(): Promise<void> {
+    // The join hands back the run shared now, if any; one that ended while we were away must not linger.
+    this.remoteScenario.set(null);
     try {
       await this.socket.join(DEFAULT_FLOOR_ID);
     } catch {
       // A missing ack is covered by the catch-up below; broadcasts simply may not flow yet.
+    }
+    if (this.publishedScenario) {
+      this.socket.publishScenario(DEFAULT_FLOOR_ID, this.publishedScenario);
     }
     const ok = await this.resync();
     this.connection.set(ok ? 'connected' : 'disconnected');
@@ -230,6 +242,28 @@ export class FloorStore {
 
   private onPlayback(payload: PlaybackPayload): void {
     this.applyPlayback(payload.playing, payload.intervalMs, true);
+  }
+
+  private onScenario(payload: ScenarioRunPayload): void {
+    if (payload.floorId === DEFAULT_FLOOR_ID) {
+      if (payload.run) {
+        // Another tab's run replaced ours on the server; don't send ours again after a reconnect.
+        this.publishedScenario = null;
+      }
+      this.remoteScenario.set(payload.run);
+    }
+  }
+
+  /** Share the scenario run this tab drives (null: it ended). Another tab's run is replaced by it. */
+  publishScenario(run: SharedScenarioRun | null): void {
+    if (run === null && this.publishedScenario === null) {
+      return;
+    }
+    this.publishedScenario = run;
+    if (run) {
+      this.remoteScenario.set(null);
+    }
+    this.socket.publishScenario(DEFAULT_FLOOR_ID, run);
   }
 
   // =========================================================================

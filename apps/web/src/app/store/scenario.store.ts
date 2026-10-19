@@ -1,8 +1,8 @@
 import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import { formatReport } from '@fleet/engine';
 import type { Action } from '@fleet/engine';
-import type { CommandSuccess } from '@fleet/protocol';
-import { MAX_LIVE_TICKS, SCENARIOS, type ScenarioDef } from '../core/scenarios';
+import type { CommandSuccess, SharedScenarioRun } from '@fleet/protocol';
+import { MAX_LIVE_TICKS, SCENARIOS, buildScenario, type ScenarioDef } from '../core/scenarios';
 import { FloorStore } from './floor.store';
 import { UploadsStore } from './uploads.store';
 
@@ -45,6 +45,8 @@ export interface RunView {
   readonly refused: boolean;
   /** The whole script has been played. */
   readonly finished: boolean;
+  /** Driven from another tab; this one only shows it (DECISIONS 5.10). */
+  readonly remote: boolean;
 }
 
 /**
@@ -54,7 +56,8 @@ export interface RunView {
  * floor this tab holds right after the previous step's answer. The server's own Play is never used
  * during an unfinished run, so the pace and the order of commands are exact. A run is local to its
  * tab; if the floor changes under it (a version gap, or Play started elsewhere) it stops and is
- * marked modified.
+ * marked modified. The driving tab shares the run's state, and every other tab shows the same
+ * checkpoints from it (DECISIONS 5.10).
  */
 @Injectable({ providedIn: 'root' })
 export class ScenarioStore {
@@ -88,43 +91,31 @@ export class ScenarioStore {
   private wake: (() => void) | null = null;
   private jobs: Promise<unknown> = Promise.resolve();
 
-  /** Checkpoint results for the active run, or null when there is none. */
+  /** Another tab's run, rebuilt from the script it shared (retraced only when the script changes). */
+  private remoteDefCache: { readonly key: string; readonly def: ScenarioDef | null } | null = null;
+  private readonly remoteDef = computed<ScenarioDef | null>(() => {
+    const shared = this.floorStore.remoteScenario();
+    return shared ? this.defOf(shared) : null;
+  });
+
+  /** Checkpoint results for the active run (this tab's, else another tab's), or null when there is none. */
   readonly run = computed<RunView | null>(() => {
     const active = this.active();
-    if (!active) {
+    if (active) {
+      return toRunView(active, this.liveReports(), this.halted(), this.cursor(), false);
+    }
+    const shared = this.floorStore.remoteScenario();
+    const def = this.remoteDef();
+    if (!shared || !def) {
       return null;
     }
-    const live = this.liveReports();
-    const halted = this.halted();
-    const checkpoints = active.def.checkpoints.map((c): CheckpointView => {
-      const lines = live[c.index] ?? null;
-      const status: CheckpointStatus = active.refused
-        ? 'na'
-        : lines === null
-          ? 'pending'
-          : sameLines(lines, c.expected)
-            ? 'pass'
-            : 'fail';
-      return {
-        index: c.index,
-        afterTicks: c.afterTicks,
-        expected: c.expected,
-        runner: c.runner,
-        live: lines,
-        status,
-        runnerDiffers: active.def.expectedText !== undefined && !sameLines(c.runner, c.expected),
-      };
-    });
-    return {
-      active,
-      checkpoints,
-      passed: checkpoints.filter((c) => c.status === 'pass').length,
-      complete: !active.refused && checkpoints.every((c) => c.status !== 'pending'),
-      modified: halted === 'modified',
-      failed: halted === 'failed',
-      refused: active.refused,
-      finished: active.refused || this.cursor() >= active.def.trace.steps.length,
-    };
+    return toRunView(
+      { def, refused: shared.refused },
+      shared.live,
+      shared.halted,
+      shared.cursor,
+      true,
+    );
   });
 
   /** While true, Play, Pause and Step drive the script; otherwise they are the server's. */
@@ -139,6 +130,28 @@ export class ScenarioStore {
   });
 
   constructor() {
+    // Share this tab's run with the other tabs on the floor; null when it ends (DECISIONS 5.10).
+    effect(() => {
+      const active = this.active();
+      const shared: SharedScenarioRun | null = active
+        ? {
+            id: active.def.id,
+            title: active.def.title,
+            group: active.def.group,
+            fileName: active.def.fileName,
+            text: active.def.text,
+            ...(active.def.expectedText === undefined
+              ? {}
+              : { expectedText: active.def.expectedText }),
+            refused: active.refused,
+            live: this.liveReports(),
+            halted: this.halted(),
+            cursor: this.cursor(),
+          }
+        : null;
+      untracked(() => this.floorStore.publishScenario(shared));
+    });
+
     // Watch for the floor changing under the run (another tab, or an edit here): stop and flag it.
     // A floor created after the load ends the run altogether (its ticks no longer belong to it).
     effect(() => {
@@ -180,8 +193,7 @@ export class ScenarioStore {
    * tick (REPORTs before it are captured now). A script over MAX_LIVE_TICKS is refused: the floor
    * is left alone and only the runner's output is shown.
    */
-  async load(): Promise<void> {
-    const def = this.selected();
+  async load(def: ScenarioDef | undefined = this.selected()): Promise<void> {
     if (!def || this.loading()) {
       return;
     }
@@ -221,13 +233,16 @@ export class ScenarioStore {
     }
   }
 
-  /** Load the scenario that is currently running again (same as Load with it selected). */
+  /**
+   * Load the scenario that is currently running again (same as Load with it selected). A run shared
+   * by another tab is reloaded from its script, so this works for an upload this browser never had.
+   */
   async reload(): Promise<void> {
-    const active = this.active();
-    if (active) {
-      this.selectedId.set(active.def.id);
+    const def = this.run()?.active.def;
+    if (def && this.scenarios().some((s) => s.id === def.id)) {
+      this.selectedId.set(def.id);
     }
-    await this.load();
+    await this.load(def ?? this.selected());
   }
 
   // =========================================================================
@@ -450,6 +465,40 @@ export class ScenarioStore {
     this.halted.set(null);
   }
 
+  /** The scenario another tab shared: the bundled one when the script matches, else rebuilt from it. */
+  private defOf(shared: SharedScenarioRun): ScenarioDef | null {
+    const key = JSON.stringify([
+      shared.id,
+      shared.title,
+      shared.fileName,
+      shared.text,
+      shared.expectedText,
+    ]);
+    if (this.remoteDefCache?.key !== key) {
+      const known = this.scenarios().find(
+        (s) =>
+          s.id === shared.id && s.text === shared.text && s.expectedText === shared.expectedText,
+      );
+      let def: ScenarioDef | null = known ?? null;
+      if (!def) {
+        try {
+          def = buildScenario(
+            shared.id,
+            shared.title,
+            shared.group,
+            shared.text,
+            shared.expectedText,
+            shared.fileName,
+          );
+        } catch {
+          def = null;
+        }
+      }
+      this.remoteDefCache = { key, def };
+    }
+    return this.remoteDefCache.def;
+  }
+
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => {
       this.wake = resolve;
@@ -460,6 +509,45 @@ export class ScenarioStore {
       }, ms);
     });
   }
+}
+
+function toRunView(
+  active: ActiveRun,
+  live: readonly (readonly string[] | null)[],
+  halted: HaltReason | null,
+  cursor: number,
+  remote: boolean,
+): RunView {
+  const checkpoints = active.def.checkpoints.map((c): CheckpointView => {
+    const lines = live[c.index] ?? null;
+    const status: CheckpointStatus = active.refused
+      ? 'na'
+      : lines === null
+        ? 'pending'
+        : sameLines(lines, c.expected)
+          ? 'pass'
+          : 'fail';
+    return {
+      index: c.index,
+      afterTicks: c.afterTicks,
+      expected: c.expected,
+      runner: c.runner,
+      live: lines,
+      status,
+      runnerDiffers: active.def.expectedText !== undefined && !sameLines(c.runner, c.expected),
+    };
+  });
+  return {
+    active,
+    checkpoints,
+    passed: checkpoints.filter((c) => c.status === 'pass').length,
+    complete: !active.refused && checkpoints.every((c) => c.status !== 'pending'),
+    modified: halted === 'modified',
+    failed: halted === 'failed',
+    refused: active.refused,
+    finished: active.refused || cursor >= active.def.trace.steps.length,
+    remote,
+  };
 }
 
 function sameLines(a: readonly string[], b: readonly string[]): boolean {

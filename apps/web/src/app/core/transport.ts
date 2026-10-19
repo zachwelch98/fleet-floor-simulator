@@ -14,6 +14,8 @@ import {
   type FloorUpdatedPayload,
   type HistoryEntry,
   type PlaybackPayload,
+  type ScenarioRunPayload,
+  type SharedScenarioRun,
 } from '@fleet/protocol';
 import { io, type Socket } from 'socket.io-client';
 
@@ -54,12 +56,16 @@ export interface SocketHandlers {
   onGiveUp(): void;
   onUpdated(payload: FloorUpdatedPayload): void;
   onPlayback(payload: PlaybackPayload): void;
+  /** Another tab's scenario run, or null when it ended (DECISIONS 5.10). */
+  onScenario(payload: ScenarioRunPayload): void;
 }
 
 export interface FloorSocket {
   connect(handlers: SocketHandlers): void;
   /** Resolves with the floor, or null for an unknown floor. Rejects on timeout. */
   join(floorId: string): Promise<FloorDto | null>;
+  /** Share the scenario run this tab drives with the other tabs on the floor (null: it ended). */
+  publishScenario(floorId: string, run: SharedScenarioRun | null): void;
   /** Manual reconnect (after `disconnected`). */
   reconnect(): void;
   close(): void;
@@ -193,6 +199,7 @@ export class SocketIoFloorSocket implements FloorSocket {
     socket.io.on('reconnect_failed', () => handlers.onGiveUp());
     socket.on(SocketEvents.Updated, (payload: FloorUpdatedPayload) => handlers.onUpdated(payload));
     socket.on(SocketEvents.Playback, (payload: PlaybackPayload) => handlers.onPlayback(payload));
+    socket.on(SocketEvents.Scenario, (payload: ScenarioRunPayload) => handlers.onScenario(payload));
     socket.connect();
   }
 
@@ -203,6 +210,10 @@ export class SocketIoFloorSocket implements FloorSocket {
     return (await this.socket
       .timeout(JOIN_TIMEOUT_MS)
       .emitWithAck(SocketEvents.Join, { floorId })) as FloorDto | null;
+  }
+
+  publishScenario(floorId: string, run: SharedScenarioRun | null): void {
+    this.socket?.emit(SocketEvents.ScenarioPublish, { floorId, run } satisfies ScenarioRunPayload);
   }
 
   reconnect(): void {

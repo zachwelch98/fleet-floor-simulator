@@ -87,6 +87,7 @@ export class MockSocket implements FloorSocket {
     this.handlers = handlers;
   });
   join = vi.fn(async (): Promise<FloorDto | null> => null);
+  publishScenario = vi.fn();
   reconnect = vi.fn();
   close = vi.fn();
 }

@@ -40,6 +40,11 @@ export function shellName(fileName: string): string {
       <p class="title" data-testid="scenario-title" [attr.data-scenario]="r.active.def.id">
         {{ r.active.def.title }}
       </p>
+      @if (r.remote) {
+        <p class="note muted" data-testid="scenario-remote">
+          Loaded on another screen; Play and Step there run the script.
+        </p>
+      }
       @if (r.refused) {
         <p class="note" data-testid="scenario-refused">
           This script has {{ r.active.def.totalTicks }} ticks, more than the {{ maxTicks }} a live
@@ -53,7 +58,9 @@ export function shellName(fileName: string): string {
         <p class="note" data-testid="scenario-failed">
           A command was refused or the connection dropped, so the run stopped.
         </p>
-      } @else if (r.passed === 0 && !r.complete && r.checkpoints[0]?.status === 'pending') {
+      } @else if (
+        !r.remote && r.passed === 0 && !r.complete && r.checkpoints[0]?.status === 'pending'
+      ) {
         <p class="note muted" data-testid="scenario-hint">Press Play or Step.</p>
       }
       @if (r.active.def.expectedLineMismatch; as m) {

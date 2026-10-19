@@ -410,3 +410,74 @@ describe('uploads through the store', () => {
     expect(env.scenarios.selectedId()).toBe(SCENARIOS[0]?.id);
   });
 });
+
+describe('sharing the run with other tabs (DECISIONS 5.10)', () => {
+  const lastPublished = (env: Env) => env.socket.publishScenario.mock.calls.at(-1)?.[1];
+
+  it('publishes the run on load and after every captured REPORT, and null when it ends', async () => {
+    const env = await setup();
+    await load(env, 'brief_a_chain');
+    TestBed.tick();
+    expect(lastPublished(env)).toMatchObject({
+      id: 'brief_a_chain',
+      text: SCENARIOS.find((s) => s.id === 'brief_a_chain')?.text,
+      live: [null],
+      halted: null,
+    });
+    await env.scenarios.step();
+    TestBed.tick();
+    expect(lastPublished(env)?.live[0]).not.toBeNull();
+    broadcast(env, { type: 'CREATE_FLOOR', width: 5, height: 5 });
+    TestBed.tick();
+    expect(lastPublished(env)).toBeNull();
+  });
+
+  it('shows another tab’s run, read only: Step stays the server’s', async () => {
+    const env = await setup();
+    const def = SCENARIOS.find((s) => s.id === 'brief_e_queues');
+    env.socket.handlers.onScenario({
+      floorId: 'main',
+      run: {
+        id: 'brief_e_queues',
+        title: def?.title ?? '',
+        group: 'brief',
+        fileName: def?.fileName ?? '',
+        text: def?.text ?? '',
+        refused: false,
+        live: [def?.checkpoints[0]?.expected ?? null, ['wrong']],
+        halted: null,
+        cursor: 7,
+      },
+    });
+    expect(env.scenarios.run()).toMatchObject({ remote: true, passed: 1 });
+    expect(statuses(env)).toEqual(['pass', 'fail']);
+    await env.scenarios.step();
+    expect(env.api.step).toHaveBeenCalledTimes(1);
+    expect(env.scenarios.active()).toBeNull();
+    env.socket.handlers.onScenario({ floorId: 'main', run: null });
+    expect(env.scenarios.run()).toBeNull();
+  });
+
+  it('rebuilds an upload this browser never had, and Reload loads it here', async () => {
+    const env = await setup();
+    env.socket.handlers.onScenario({
+      floorId: 'main',
+      run: {
+        id: 'upload-x',
+        title: 'mine.txt',
+        group: 'uploaded',
+        fileName: 'mine.txt',
+        text: 'PLACE R1 0,0,EAST\nQUEUE R1 MOVE\nTICK\nREPORT\n',
+        refused: false,
+        live: [null],
+        halted: null,
+        cursor: 3,
+      },
+    });
+    expect(env.scenarios.run()?.checkpoints[0]?.expected).toEqual(['R1 1,0,EAST']);
+    await env.scenarios.reload();
+    expect(env.scenarios.run()).toMatchObject({ remote: false });
+    expect(env.scenarios.active()?.def.id).toBe('upload-x');
+    expect(types(env)).toEqual(['CREATE_FLOOR', 'PLACE_ROBOT', 'QUEUE_COMMANDS']);
+  });
+});
