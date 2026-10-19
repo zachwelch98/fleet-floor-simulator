@@ -6,7 +6,8 @@
   "workspaces": [
     "packages/engine",
     "packages/protocol",
-    "apps/*"
+    "apps/*",
+    "e2e"
   ],
   "engines": {
     "node": ">=22"
@@ -21,17 +22,19 @@
     "e2e": "npm run e2e --workspaces --if-present",
     "verify:fast": "npm run typecheck && npm run lint && npm run format:check && npm run test -w @fleet/engine",
     "verify": "npm run typecheck && npm run lint && npm run format:check && npm run build && npm run test && npm run e2e",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "dev": "npm run build -w @fleet/engine -w @fleet/protocol && node scripts/dev.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
+    "@types/node": "^22.0.0",
     "eslint": "^10.13.0",
     "fast-check": "^4.10.2",
+    "globals": "^17.13.0",
     "prettier": "^3.9.10",
     "tsx": "^4.23.15",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.2",
-    "vitest": "^5.0.5",
-    "@types/node": "^22.0.0"
+    "vitest": "^5.0.5"
   }
 }

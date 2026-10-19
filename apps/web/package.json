@@ -1,0 +1,32 @@
+{
+  "name": "@fleet/web",
+  "version": "0.1.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve --proxy-config proxy.conf.json",
+    "dev": "ng serve --proxy-config proxy.conf.json",
+    "build": "ng build",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
+    "test": "ng test --watch=false"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/common": "^22.2.0",
+    "@angular/compiler": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/forms": "^22.2.0",
+    "@angular/platform-browser": "^22.2.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "@fleet/engine": "0.1.0",
+    "@fleet/protocol": "0.1.0",
+    "socket.io-client": "^4.8.4"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.2.3",
+    "@angular/cli": "^22.2.3",
+    "@angular/compiler-cli": "^22.2.0",
+    "jsdom": "^30.0.0"
+  },
+  "description": "Angular UI: grid, controls, robot queues, history, live sync over socket.io."
+}
