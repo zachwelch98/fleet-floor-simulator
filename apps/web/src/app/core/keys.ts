@@ -23,13 +23,19 @@ export interface KeyInput {
   readonly target: EventTarget | null;
 }
 
-/** Text-entry targets keep their own keys: every input type (range and number included). */
+/**
+ * Text-entry targets keep their own keys: every input type (range and number included) except
+ * checkbox, so a focused checkbox does not swallow the arrow keys (UI_SPEC 5.2).
+ */
 export function isTextEntry(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
   if (!el || typeof el.tagName !== 'string') {
     return false;
   }
   const tag = el.tagName;
+  if (tag === 'INPUT' && (el as HTMLInputElement).type === 'checkbox') {
+    return false;
+  }
   return (
     tag === 'INPUT' ||
     tag === 'TEXTAREA' ||
@@ -72,5 +78,13 @@ export function decideKey(event: KeyInput, ctx: KeyContext): KeyAction | null {
       return ctx.hasSelection ? { type: 'deselect' } : null;
     default:
       return null;
+  }
+}
+
+/** Hands the keyboard back to the global handler: blur the focused text-entry control, if any (UI_SPEC 5.2). */
+export function blurTextEntry(doc: Document = document): void {
+  const active = doc.activeElement;
+  if (active && active !== doc.body && isTextEntry(active)) {
+    (active as HTMLElement).blur();
   }
 }

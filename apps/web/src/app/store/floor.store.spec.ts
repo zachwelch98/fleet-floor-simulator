@@ -377,6 +377,78 @@ describe('FloorStore commands', () => {
     expect(ctx.api.sendAction).toHaveBeenLastCalledWith({ type: 'TOGGLE_OBSTACLE', x: 5, y: 5 });
   });
 
+  it('pad GOTO in edit mode turns edit off and arms; with no selection it does nothing', async () => {
+    const ctx = setup(floorDto({ state: floorState({ robots: [robot('R1', 1, 1)] }) }));
+    await ready(ctx);
+    ctx.store.toggleGoto();
+    expect(ctx.store.gotoArmed()).toBe(false);
+    ctx.store.select('R1');
+    ctx.store.setEditMode(true);
+    ctx.store.toggleGoto();
+    expect(ctx.store.editMode()).toBe(false);
+    expect(ctx.store.gotoArmed()).toBe(true);
+    // A second press (edit already off) disarms.
+    ctx.store.toggleGoto();
+    expect(ctx.store.gotoArmed()).toBe(false);
+  });
+
+  it('drops command keys silently while an own PLACE is in flight, then resumes', async () => {
+    const ctx = setup(floorDto({ state: floorState({ robots: [robot('R1', 1, 1)] }) }));
+    await ready(ctx);
+    ctx.store.select('R1');
+    let release!: (o: CommandOutcome) => void;
+    ctx.api.sendAction.mockImplementationOnce(
+      () => new Promise<CommandOutcome>((res) => (release = res)),
+    );
+    const placing = ctx.store.activateCell({ x: 4, y: 4, shift: false });
+    await flush();
+    await ctx.store.queueCommand('MOVE');
+    await flush();
+    expect(ctx.api.sendAction).toHaveBeenCalledTimes(1);
+    expect(ctx.toasts.toasts()).toHaveLength(0);
+    const placed = entry(2, {
+      type: 'ROBOT_PLACED',
+      id: 'R2',
+      x: 4,
+      y: 4,
+      facing: 'NORTH',
+      replaced: false,
+    });
+    release(
+      success(
+        floorDto({
+          version: 2,
+          state: floorState({ robots: [robot('R1', 1, 1), robot('R2', 4, 4)], nextRobotNum: 3 }),
+        }),
+        [placed],
+      ),
+    );
+    await placing;
+    expect(ctx.store.selectedId()).toBe('R2');
+    ctx.api.sendAction.mockResolvedValue(success(floorDto({ version: 3 }), []));
+    await ctx.store.queueCommand('LEFT');
+    expect(ctx.api.sendAction).toHaveBeenLastCalledWith({
+      type: 'QUEUE_COMMANDS',
+      id: 'R2',
+      commands: [{ kind: 'LEFT' }],
+    });
+  });
+
+  it('resumes command keys after a failed PLACE', async () => {
+    const ctx = setup(floorDto({ state: floorState({ robots: [robot('R1', 1, 1)] }) }));
+    await ready(ctx);
+    ctx.store.select('R1');
+    ctx.api.sendAction.mockResolvedValueOnce({ kind: 'NETWORK_ERROR' });
+    await ctx.store.activateCell({ x: 4, y: 4, shift: false });
+    ctx.api.sendAction.mockResolvedValue(success(floorDto({ version: 2 }), []));
+    await ctx.store.queueCommand('MOVE');
+    expect(ctx.api.sendAction).toHaveBeenLastCalledWith({
+      type: 'QUEUE_COMMANDS',
+      id: 'R1',
+      commands: [{ kind: 'MOVE' }],
+    });
+  });
+
   it('announces a manual Step with one summary sentence', async () => {
     const ctx = setup();
     await ready(ctx);

@@ -108,6 +108,8 @@ export class FloorStore {
   // --- internals ------------------------------------------------------------
   private chain: Promise<unknown> = Promise.resolve();
   private inflight: Action | null = null;
+  /** Own PLACE_ROBOT requests queued or in flight (UI_SPEC 5.2: command keys are dropped meanwhile). */
+  private placing = 0;
   private socketStarted = false;
   private resyncing = false;
   private resyncAgain = false;
@@ -346,8 +348,14 @@ export class FloorStore {
     this.showIdle.set(on);
   }
 
+  /** Pad GOTO. In edit mode it turns edit off and arms (the two modes are exclusive, UI_SPEC 5.1). */
   toggleGoto(): void {
-    if (this.selectedId() === null || this.editMode()) {
+    if (this.selectedId() === null) {
+      return;
+    }
+    if (this.editMode()) {
+      this.editMode.set(false);
+      this.gotoRaw.set(true);
       return;
     }
     this.gotoRaw.set(!this.gotoRaw());
@@ -403,16 +411,23 @@ export class FloorStore {
       this.toggleSelect(robotHere.id);
       return;
     }
-    const result = await this.submit({ type: 'PLACE_ROBOT', x, y, facing: 'NORTH' });
-    const placed = result?.history.find((e) => e.event.type === 'ROBOT_PLACED');
-    if (placed && placed.event.type === 'ROBOT_PLACED') {
-      this.select(placed.event.id);
+    this.placing++;
+    try {
+      const result = await this.submit({ type: 'PLACE_ROBOT', x, y, facing: 'NORTH' });
+      const placed = result?.history.find((e) => e.event.type === 'ROBOT_PLACED');
+      if (placed && placed.event.type === 'ROBOT_PLACED') {
+        this.select(placed.event.id);
+      }
+    } finally {
+      this.placing--;
     }
   }
 
   async queueCommand(kind: 'MOVE' | 'LEFT' | 'RIGHT'): Promise<void> {
     const id = this.selectedId();
-    if (!id) {
+    // While our own PLACE is pending the new robot is not selected yet, and the old selection is
+    // being left behind: drop the command silently (UI_SPEC 5.2).
+    if (!id || this.placing > 0) {
       return;
     }
     await this.submit({ type: 'QUEUE_COMMANDS', id, commands: [{ kind }] });
