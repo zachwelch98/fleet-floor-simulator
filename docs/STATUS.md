@@ -34,6 +34,13 @@ phase gate. Commit it along with the work it describes.
   4.5rem rail with stacked pills (container query), key shown on an empty floor. `--grid-chrome-x`
   reserves the key column. No existing test changed; new specs in `layout.spec.ts` and
   `legend.spec.ts` (verify green: web 167, e2e 119 + 1 skipped). DECISIONS 5.9 addendum. Pending: PM review of screenshots and merge.
+- **Shared checkpoints (2026-10-19, on `main`, committed, verify green, not pushed):** the scenario run shows on every
+  screen. **Protocol contract change (PM):** `SocketEvents.ScenarioPublish` / `SocketEvents.Scenario`,
+  `SharedScenarioRun`, `ScenarioRunPayload`, `MAX_SHARED_SCENARIO_CHARS`. Gateway relays and caches
+  the run per floor (cleared when the publisher disconnects); `FloorStore.remoteScenario` /
+  `publishScenario`; `ScenarioStore.run` falls back to the shared run (`RunView.remote`). New
+  `apps/api/test/api-scenario-relay.test.ts`, store specs, two e2e cases in `scenarios.spec.ts` (the
+  multi-tab case now expects the panel in both tabs). DECISIONS 5.10.
 - **Test-infra note:** supertest opens one socket per request. Thousands of requests in quick
   succession can exhaust ephemeral ports (EADDRNOTAVAIL). Bulk setup should use
   `stepManyPooled` (keep-alive fetch) in `apps/api/test/support.ts`.

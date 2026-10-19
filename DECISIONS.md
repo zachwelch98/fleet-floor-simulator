@@ -269,7 +269,7 @@ FIFO as every other command. No new endpoint and no change to the engine or prot
 - **Checkpoints.** *(5.8 reads them from the floor after each step instead of the server history,
   and replaces the auto-pause: Play ends by itself when the script does.)* The `.expected` file is
   cut per `REPORT` by the runner's report sizes, and a test checks it matches the engine runner.
-- **Local to the tab.** The panel lives in the tab that pressed Load. A change to the floor from
+- **Local to the tab.** *(5.10: driven from one tab, shown on every screen.)* The panel lives in the tab that pressed Load. A change to the floor from
   elsewhere stops the run as "edited, results may not match"; a `FLOOR_CREATED` from elsewhere ends it.
 - **Bundling:** the files in `scenarios/` are imported as text through the esbuild `loader` option
   in `apps/web/angular.json`, so the picker and the golden tests share one copy.
@@ -366,6 +366,26 @@ The one-line text legend in the status line is replaced by a grouped visual key 
     The key reserves nothing vertically.
 
 ---
+
+### 5.10 Scenario checkpoints on every screen *(extra)*
+The run is still driven by the tab that pressed Load (5.7, 5.8), but every other screen on the floor
+shows the same "Scenario checkpoints" panel and sidebar summary, live. **Decisions:**
+- **The driving tab shares the run's inputs, not its view.** After each change it sends
+  `scenario:publish` with a `SharedScenarioRun` (id, title, group, file name, script text, optional
+  `.expected` text, refused, the live REPORT lines so far, the halt reason, the script cursor). A
+  watching tab rebuilds the scenario with `buildScenario` (the bundled one when the script matches)
+  and works out pass/fail with the same code, so an upload another browser never had still shows.
+- **The server relays, it does not judge.** It keeps the last run per floor in memory, sends it to the
+  other sockets in the room (not back to the sender) as `floor:scenario`, and to a socket right after it
+  joins. A loose shape check drops malformed runs and scripts over 64 KB (the upload limit). Not persisted.
+- **Who ends it.** Only the publishing socket can end the run (`run: null`); an end from a tab another
+  Load replaced is dropped. When the publishing socket disconnects the run is cleared for everyone,
+  because the run state dies with that tab. A reconnecting driver publishes it again.
+- **Watchers are read only.** In a watching tab Play, Pause and Step stay the server's, as before; a
+  Step there still interferes and the driver flags the run "modified", which now shows on both screens.
+  The panel says "Loaded on another screen" and drops the "Press Play or Step" hint. Reload in a
+  watching tab loads the shared scenario there (taking the run over), so it works for an upload that
+  browser never had.
 
 ## 6. Persistence
 
