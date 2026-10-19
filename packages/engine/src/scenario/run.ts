@@ -1,14 +1,21 @@
 import { apply, createFloorState } from '../engine.js';
 import { SCENARIO_DEFAULT_FLOOR } from '../types.js';
-import type { FloorState } from '../types.js';
+import type { Facing } from '../types.js';
 import { parseScenarioLine } from './parse.js';
 
+/** The robot fields REPORT prints. `Robot` and the TICK_RESOLVED result both fit, so the UI shares this. */
+export interface ReportRobot {
+  readonly id: string;
+  readonly num: number;
+  readonly x: number;
+  readonly y: number;
+  readonly facing: Facing;
+}
+
 /** `R1 2,2,SOUTH` per robot sorted by robot number, or `EMPTY`. */
-function report(state: FloorState): string[] {
-  if (state.robots.length === 0) return ['EMPTY'];
-  return [...state.robots]
-    .sort((a, b) => a.num - b.num)
-    .map((r) => `${r.id} ${r.x},${r.y},${r.facing}`);
+export function formatReport(robots: readonly ReportRobot[]): string[] {
+  if (robots.length === 0) return ['EMPTY'];
+  return [...robots].sort((a, b) => a.num - b.num).map((r) => `${r.id} ${r.x},${r.y},${r.facing}`);
 }
 
 /**
@@ -34,7 +41,7 @@ export function runScenario(text: string): string[] {
         }
         break;
       case 'report':
-        out.push(...report(state));
+        out.push(...formatReport(state.robots));
         break;
       case 'skip':
       case 'invalid':
