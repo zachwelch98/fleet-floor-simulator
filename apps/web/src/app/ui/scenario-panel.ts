@@ -73,10 +73,11 @@ import type { RunView } from '../store/scenario.store';
         type="button"
         class="btn btn-small"
         data-testid="btn-upload-scenario"
+        aria-label="Upload scenario file"
         [disabled]="loading()"
         (click)="scenarioFile.click()"
       >
-        Upload scenario…
+        Upload…
       </button>
       <input
         #scenarioFile
@@ -91,10 +92,13 @@ import type { RunView } from '../store/scenario.store';
           type="button"
           class="btn btn-small"
           data-testid="btn-attach-expected"
+          [attr.aria-label]="
+            hasExpected() ? 'Replace expected output file' : 'Attach expected output file'
+          "
           [disabled]="loading()"
           (click)="expectedFile.click()"
         >
-          {{ hasExpected() ? 'Replace expected…' : 'Attach expected…' }}
+          Expected…
         </button>
         <input
           #expectedFile
@@ -108,6 +112,7 @@ import type { RunView } from '../store/scenario.store';
           type="button"
           class="btn btn-small btn-danger"
           data-testid="btn-remove-upload"
+          aria-label="Remove uploaded scenario"
           [disabled]="loading()"
           (click)="removeUpload.emit()"
         >

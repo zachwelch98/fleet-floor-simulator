@@ -44,7 +44,7 @@ Open two tabs to see Module D: changes, ticks and Play/Pause sync live between t
 | Toggle obstacles | turn on "Edit obstacles", then click cells |
 | Advance | Step (one tick), or Play / Pause with the interval slider |
 | Load a scenario | pick one under "Scenarios" (the five brief examples plus a few more) and press Load, then Play or Step: each `REPORT` shows as a checkpoint that turns ✓ or ✗, and Play stops after the last |
-| Upload your own scenario | "Upload scenario…" takes any `.txt` in the brief's §1.5 format, under any file name (optionally "Attach expected…" for its `.expected`). The page shows what `npm run scenario -- <file>` prints, then Play runs the same script on the live floor and checks it. Uploads stay in this browser |
+| Upload your own scenario | "Upload…" takes any `.txt` in the brief's §1.5 format, under any file name (optionally "Expected…" for its `.expected`). The page shows what `npm run scenario -- <file>` prints, then Play runs the same script on the live floor and checks it. Uploads stay in this browser |
 | Clear a queue / delete a robot / new floor | buttons in the robot row / toolbar |
 | Cancel GOTO, then deselect | Esc |
 
