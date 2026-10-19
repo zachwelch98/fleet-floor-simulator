@@ -1,0 +1,104 @@
+<section class="panel robots" aria-labelledby="robots-heading">
+  <h2 id="robots-heading" class="panel-title" #heading tabindex="-1">
+    Robots ({{ robots().length }})
+  </h2>
+  @if (robots().length === 0) {
+  <p class="empty muted" data-testid="robot-list-empty">
+    No robots yet. Click an empty cell on the grid to place R{{ nextRobotNum() }}.
+  </p>
+  }
+  <ul class="list" data-testid="robot-list">
+    @for (row of rows(); track row.robot.id) {
+    <li
+      class="row"
+      [attr.data-testid]="'robot-row-' + row.robot.id"
+      [attr.data-selected]="row.robot.id === selectedId() ? 'true' : 'false'"
+      [attr.data-x]="row.robot.x"
+      [attr.data-y]="row.robot.y"
+      [attr.data-facing]="row.robot.facing"
+      [attr.data-hue]="row.hue"
+      (click)="onRowClick(row.robot.id, $event)"
+    >
+      <button
+        type="button"
+        class="select"
+        [attr.data-testid]="'robot-select-' + row.robot.id"
+        [attr.aria-pressed]="row.robot.id === selectedId()"
+        (click)="select.emit(row.robot.id)"
+      >
+        <span class="swatch" aria-hidden="true"></span>
+        <strong>{{ row.robot.id }}</strong>
+        <span>({{ row.robot.x }},{{ row.robot.y }})</span>
+        <span>{{ row.arrow }} {{ row.robot.facing }}</span>
+        @if (row.robot.id === selectedId()) {
+        <span class="tag">Selected</span>
+        }
+      </button>
+
+      <ol
+        class="queue"
+        [attr.data-testid]="'queue-' + row.robot.id"
+        [attr.data-length]="row.chips.length"
+        [attr.aria-label]="'Pending commands for ' + row.robot.id"
+      >
+        @for (chip of row.chips; track $index) {
+        <li
+          class="chip"
+          data-testid="queue-item"
+          [attr.data-kind]="chip.kind"
+          [attr.data-index]="$index"
+          [attr.data-front]="$first ? 'true' : 'false'"
+          [attr.data-x]="chip.x"
+          [attr.data-y]="chip.y"
+        >
+          @if ($first) {
+          <span class="visually-hidden">Next: </span>
+          } {{ chip.text }} @if ($first && chip.kind === 'GOTO') {
+          <small class="muted">heading there</small>
+          }
+        </li>
+        }
+      </ol>
+      @if (row.chips.length === 0) {
+      <p class="queue-empty muted" [attr.data-testid]="'queue-empty-' + row.robot.id">
+        Queue empty
+      </p>
+      }
+
+      <p
+        class="last"
+        [attr.data-testid]="'last-result-' + row.robot.id"
+        [attr.data-outcome]="row.last?.outcome ?? null"
+        [attr.data-reason]="row.last?.reason ?? null"
+        [attr.data-group]="row.last?.group ?? null"
+      >
+        @if (row.last; as last) { Last tick: <span aria-hidden="true">{{ last.glyph }}</span> {{
+        last.text }} } @else { Last tick: no result yet }
+      </p>
+
+      <div class="actions">
+        <button
+          type="button"
+          class="btn btn-small"
+          [attr.data-testid]="'btn-clear-queue-' + row.robot.id"
+          [attr.aria-label]="'Clear queue for ' + row.robot.id"
+          [disabled]="row.chips.length === 0 || disabled()"
+          (click)="clearQueue.emit(row.robot.id)"
+        >
+          Clear queue
+        </button>
+        <button
+          type="button"
+          class="btn btn-small btn-danger del"
+          [attr.data-testid]="'btn-delete-robot-' + row.robot.id"
+          [attr.aria-label]="'Delete ' + row.robot.id"
+          [disabled]="disabled()"
+          (click)="onDelete(row.robot.id)"
+        >
+          Delete
+        </button>
+      </div>
+    </li>
+    }
+  </ul>
+</section>

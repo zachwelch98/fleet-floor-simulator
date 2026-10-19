@@ -1,0 +1,102 @@
+<section class="panel history" data-testid="history-log" aria-labelledby="history-heading">
+  <div class="head">
+    <h2 id="history-heading" class="panel-title">History</h2>
+    <label class="idle">
+      <input
+        type="checkbox"
+        data-testid="toggle-show-idle"
+        [checked]="showIdle()"
+        (change)="onShowIdle($event)"
+      />
+      Show idle robots
+    </label>
+    <div class="bulk">
+      <button
+        type="button"
+        class="btn btn-small"
+        data-testid="btn-history-expand-all"
+        (click)="expandAll()"
+      >
+        Expand all
+      </button>
+      <button
+        type="button"
+        class="btn btn-small"
+        data-testid="btn-history-collapse-all"
+        (click)="collapseAll()"
+      >
+        Collapse all
+      </button>
+    </div>
+  </div>
+
+  @if (history().length === 0) {
+  <p class="empty muted" data-testid="history-empty">
+    Nothing has happened yet. Click a cell to place a robot, then press Step.
+  </p>
+  }
+
+  <div class="log">
+    @for (block of view().blocks; track block.seq) { @if (block.kind === 'tick') {
+    <details
+      class="tick"
+      [attr.data-testid]="'history-tick-' + block.tick"
+      [attr.data-tick]="block.tick"
+      [attr.data-seq]="block.seq"
+      [attr.data-open]="isOpen(block) ? 'true' : 'false'"
+      [attr.data-empty]="block.empty ? 'true' : null"
+      [open]="isOpen(block)"
+      (toggle)="onToggle(block, $event)"
+    >
+      <summary
+        [attr.data-testid]="'history-tick-toggle-' + block.tick"
+        (click)="onSummaryClick(block, $event)"
+      >
+        <span>{{ block.summary }}</span>
+        <time class="muted" [attr.datetime]="block.at">{{ clock(block.at) }}</time>
+      </summary>
+      @for (line of block.lines; track line.key) {
+      <div
+        class="entry"
+        data-testid="history-entry"
+        [attr.data-type]="line.dataType"
+        [attr.data-seq]="line.seq"
+        [attr.data-robot]="line.robot ?? null"
+        [attr.data-outcome]="line.outcome ?? null"
+        [attr.data-reason]="line.reason ?? null"
+        [attr.data-group]="line.group ?? null"
+      >
+        <span class="glyph" aria-hidden="true">{{ line.glyph }}</span>
+        <span class="text">
+          {{ line.text }} @if (line.code) {
+          <span class="code muted">{{ line.code }}</span>
+          }
+        </span>
+        <time class="muted" [attr.datetime]="line.at">{{ clock(line.at) }}</time>
+      </div>
+      }
+    </details>
+    } @else {
+    <div
+      class="entry standalone"
+      data-testid="history-entry"
+      [attr.data-type]="block.line.dataType"
+      [attr.data-seq]="block.line.seq"
+      [attr.data-robot]="block.line.robot ?? null"
+    >
+      <span class="glyph" aria-hidden="true">{{ block.line.glyph }}</span>
+      <span class="text">{{ block.line.text }}</span>
+      <time class="muted" [attr.datetime]="block.line.at">{{ clock(block.line.at) }}</time>
+    </div>
+    } } @if (view().hasMore) {
+    <button
+      type="button"
+      class="btn btn-small"
+      data-testid="btn-history-older"
+      (click)="showOlder()"
+    >
+      Show 200 older
+    </button>
+    }
+  </div>
+</section>

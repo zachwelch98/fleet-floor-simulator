@@ -1,1 +1,146 @@
-/* Global styles. Dev 3: import the design tokens from docs/design/tokens.css (copy into src/). */
+/* Global styles: design tokens (docs/design/tokens.css, copied) plus shared primitives. */
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Robot hue: `data-hue="3"` exposes --hue (index = (num - 1) % 8). */
+[data-hue='1'] {
+  --hue: var(--robot-1);
+}
+[data-hue='2'] {
+  --hue: var(--robot-2);
+}
+[data-hue='3'] {
+  --hue: var(--robot-3);
+}
+[data-hue='4'] {
+  --hue: var(--robot-4);
+}
+[data-hue='5'] {
+  --hue: var(--robot-5);
+}
+[data-hue='6'] {
+  --hue: var(--robot-6);
+}
+[data-hue='7'] {
+  --hue: var(--robot-7);
+}
+[data-hue='8'] {
+  --hue: var(--robot-8);
+}
+
+/* Outcome colors: `data-group="blocked"` exposes --o-fg / --o-bg / --o-line. */
+[data-group='moved'] {
+  --o-fg: var(--outcome-moved-fg);
+  --o-bg: var(--outcome-moved-bg);
+  --o-line: var(--outcome-moved-line);
+}
+[data-group='turned'] {
+  --o-fg: var(--outcome-turned-fg);
+  --o-bg: var(--outcome-turned-bg);
+  --o-line: var(--outcome-turned-line);
+}
+[data-group='blocked'] {
+  --o-fg: var(--outcome-blocked-fg);
+  --o-bg: var(--outcome-blocked-bg);
+  --o-line: var(--outcome-blocked-line);
+}
+[data-group='waiting'] {
+  --o-fg: var(--outcome-waiting-fg);
+  --o-bg: var(--outcome-waiting-bg);
+  --o-line: var(--outcome-waiting-line);
+}
+[data-group='idle'] {
+  --o-fg: var(--outcome-idle-fg);
+  --o-bg: var(--outcome-idle-bg);
+  --o-line: var(--outcome-idle-line);
+}
+[data-group='unreachable'] {
+  --o-fg: var(--outcome-unreachable-fg);
+  --o-bg: var(--outcome-unreachable-bg);
+  --o-line: var(--outcome-unreachable-line);
+}
+[data-group='arrived'] {
+  --o-fg: var(--outcome-arrived-fg);
+  --o-bg: var(--outcome-arrived-bg);
+  --o-line: var(--outcome-arrived-line);
+}
+
+/* Buttons: native <button> with a shared look. */
+.btn {
+  min-height: var(--control-height);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-2);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  transition:
+    background-color var(--motion-fast),
+    border-color var(--motion-fast);
+}
+.btn:hover:not(:disabled) {
+  background: var(--color-surface-2);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-accent);
+  filter: brightness(1.1);
+}
+.btn-danger {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+.btn-small {
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+/* Touch targets stay at 44px on phones; compact on desktop. */
+@media (min-width: 900px) {
+  .btn-small {
+    min-height: 32px;
+  }
+}
+
+.panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2);
+  padding: var(--space-3);
+}
+.panel-title {
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+.muted {
+  color: var(--color-text-muted);
+}
