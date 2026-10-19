@@ -8,22 +8,19 @@ phase gate. Commit it along with the work it describes.
 
 ---
 
-## Current position (resumed 2026-10-18)
+## Current position (2026-10-18)
 
-- **State:** **resumed mid-Phase 2.** Resume checklist passed (clean tree, 677 engine tests,
-  API 31 passed / 1 skipped, context map rebuilt). **Tester (part 2) spawned** in a worktree to
-  write the API integration tests; awaiting its report.
+- **State:** **Phase 2 work complete; awaiting the Phase 2 gate with the user.** Tester (part 2)
+  merged (158 new API tests). PM mutation spot-check: 10/10 injected API bugs caught.
+  `npm run verify` green: 677 engine + 189 API tests (1 skipped on purpose: the Phase 3 pause test).
 - **Working tree:** clean on `main`. `npm run verify:fast` is green (677 engine tests, typecheck,
   lint, format). `npm test -w @fleet/api` is green (31 passed, 1 skipped on purpose; see below).
 - **Phase 2 is done except one item:** the Tester's API integration tests (only `api-boot` exists).
-- **Next action when resuming:**
-  1. Run the [Resume checklist](#resume-checklist) below.
-  2. Spawn a **Tester** (Sonnet, worktree) to finish the Phase 2 API tests, using the
-     [remaining-work list](#remaining-phase-2-work-tester) as its brief, then merge and triage.
-  3. PM mutation spot-check on the API (as was done for the engine in Phase 1): e.g. drop the
-     version check, skip the snapshot upsert, return 200 on rejection, mis-order history. Then
-     **Phase 2 gate** with the user.
-  4. Phase 3 (see the checklist below and PLAN.md).
+- **Next action:** Phase 2 gate with the user. After approval: Phase 3 (PM scaffolds `apps/web`
+  and installs all deps incl. Playwright on `main`, then spawns Dev 2, Dev 3, Tester, Designer).
+- **Test-infra note:** supertest opens one socket per request. Thousands of requests in quick
+  succession can exhaust ephemeral ports (EADDRNOTAVAIL). Bulk setup should use
+  `stepManyPooled` (keep-alive fetch) in `apps/api/test/support.ts`. Tell the Phase 3 Tester.
 
 ## Resume checklist
 
@@ -44,9 +41,9 @@ changed mid-session to `Mac.(none)` and commits started failing. The last commit
 the rest of the history. **Ask the user** to set an identity (and decide whether to rewrite the
 author email before the public push). Don't set it on their behalf.
 
-## Remaining Phase 2 work (Tester)
+## Phase 2 Tester brief (done; kept for reference)
 
-The Tester was paused with these unwritten. Shared helpers already exist in
+The Tester was briefed with this list. Shared helpers already exist in
 `apps/api/test/support.ts` (fixed clock `FIXED_ISO`, `tempDbPath()`/`removeDb()`,
 `listenOnLoopback(app)`, request helpers). Write tests **black-box** against
 `packages/protocol/src/index.ts`, `apps/api/src/app.factory.ts` and `apps/api/src/testing.ts`.
@@ -99,13 +96,13 @@ The Tester was paused with these unwritten. Shared helpers already exist in
 - [x] Designer: `docs/design/UI_SPEC.md` + `tokens.css` (PM answers in spec §12)
 - [x] **Gate** approved 2026-10-18
 
-### Phase 2: GOTO + API (mostly done)
+### Phase 2: GOTO + API (awaiting gate)
 - [x] Dev 1: GOTO (`pathfinding.ts`, `planGotoStep`), CLEAR_QUEUE resets the counter
 - [x] Dev 2: NestJS API + SQLite (normalized tables + latest snapshot + actions + events), REST per protocol, `createApp`, `inspectFloor`
 - [x] Tester (part 1): 61 GOTO tests + 21 GOTO golden scenarios, all green against the real engine on first run (written black-box); `api-boot.test.ts`
 - [x] PM end-to-end smoke on the built server: GOTO detour, 409 rejection, restart persistence
-- [ ] **Tester (part 2): API integration tests.** See "Remaining Phase 2 work" above
-- [ ] PM: API mutation spot-check
+- [x] Tester (part 2): 158 API integration tests (commands incl. exhaustive 409 reasons + concurrency, history, persistence, three-way consistency incl. after restart). No API bugs found
+- [x] PM: API mutation spot-check: 10/10 caught (skip version check, skip snapshot upsert, 409→200, history order, `after` off-by-one, limit clamp 0, high-water mark, GOTO counter, version +2 on TICK, skip action log)
 - [ ] **Gate**
 
 ### Phase 3: real-time + UI
@@ -124,7 +121,7 @@ The Tester was paused with these unwritten. Shared helpers already exist in
 
 ## Agents
 
-**Tester** running (worktree, Sonnet): Phase 2 API integration tests (items 1–5 below).
+None running. Tester (part 2) finished and was merged; worktree and branch removed.
 Commits use the `GIT_AUTHOR_*`/`GIT_COMMITTER_*` env-var workaround (identity still unresolved). Agent IDs can't be resumed from a new session; re-spawn roles with the
 template in PLAN.md "Agent briefs" and the role details in PLAN.md "Team and orchestration".
 
