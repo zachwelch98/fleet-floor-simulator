@@ -65,6 +65,23 @@ describe('GridLegend', () => {
     expect(q('legend-on-floor')).toBeNull();
   });
 
+  it('has a rail of pills for the active codes only, in key order, and none while nothing is active', () => {
+    const { el, q } = mount(['BB', 'CT']);
+    const rail = q('legend-rail');
+    expect(rail?.getAttribute('aria-hidden')).toBe('true');
+    expect(
+      Array.from(rail?.querySelectorAll('.pill') ?? []).map((p) =>
+        p.getAttribute('data-rail-code'),
+      ),
+    ).toEqual(['CT', 'BB']);
+    expect(rail?.querySelectorAll('[data-group="blocked"]')).toHaveLength(2);
+    // The rail's pills do not count as key entries.
+    expect(el.querySelectorAll('[data-code]')).toHaveLength(LEGEND_BADGES.length);
+
+    const none = mount();
+    expect(none.q('legend-rail')).toBeNull();
+  });
+
   it('is open by default, and remembers a collapse', () => {
     const { fixture, q } = mount();
     const details = q('grid-legend') as HTMLDetailsElement;

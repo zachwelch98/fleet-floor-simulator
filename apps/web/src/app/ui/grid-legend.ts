@@ -63,6 +63,14 @@ const BADGE_GROUPS = [
       Key
       @if (activeList().length > 0) {
         <span class="on" data-testid="legend-on-floor">· {{ activeCodes() }} on the floor</span>
+        <span class="rail" data-testid="legend-rail" aria-hidden="true">
+          @for (e of activeEntries(); track e.text) {
+            <span class="pill" [attr.data-group]="e.group" [attr.data-rail-code]="e.text"
+              ><span>{{ e.glyph }}</span
+              ><span>{{ e.text }}</span></span
+            >
+          }
+        </span>
       }
     </summary>
     <div class="groups">
@@ -127,7 +135,8 @@ const BADGE_GROUPS = [
   styles: `
     :host {
       display: block;
-      margin-top: var(--space-2);
+      /* The key reshapes itself to the width it is given (see the rail rules below). */
+      container-type: inline-size;
     }
     .key {
       border: 1px solid var(--color-border);
@@ -144,14 +153,29 @@ const BADGE_GROUPS = [
       gap: var(--space-2);
       font-weight: 700;
     }
+    /* Disclosure chevron, drawn by CSS so the summary text stays "Key · ..." */
+    summary::before {
+      content: '▸';
+      content: '▸' / '';
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+    .key[open] summary::before {
+      content: '▾';
+      content: '▾' / '';
+    }
     .on {
       font-weight: 600;
       color: var(--color-text-muted);
     }
+    .rail {
+      display: none;
+    }
     .groups {
       display: grid;
-      /* Groups sit side by side when the floor column is wide, and stack on a phone. */
-      grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+      /* Groups sit side by side when the column is wide (under the checkpoints), and stack in the
+         15rem key column and on a phone. min(..., 100%) keeps one group from overflowing a narrow box. */
+      grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
       gap: var(--space-2) var(--space-4);
       padding: var(--space-1) 0 var(--space-2);
     }
@@ -208,6 +232,40 @@ const BADGE_GROUPS = [
       opacity: 0.55;
     }
 
+    /* Collapsed in a slim column (the 4.5rem rail beside the grid): just "Key" and the codes that
+       are on the floor, as stacked pills. The "· CT, BB on the floor" text stays for screen
+       readers. Any wider and the summary is the one-line text again. */
+    @container (max-width: 6rem) {
+      .key {
+        padding: var(--space-1);
+      }
+      summary {
+        flex-direction: column;
+        gap: 2px;
+      }
+      .key:not([open]) .on {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+      .key:not([open]) .rail {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-1);
+        padding: var(--space-1) 0;
+      }
+      .rail .pill {
+        --pill-size: var(--text-xs);
+        --pill-line: 16px;
+        --pill-gap: 3px;
+        padding: 0 var(--space-2);
+      }
+    }
+
     /* Grid symbols, same tokens as the floor: robot token, obstacle hatch, GOTO ring. */
     .chip {
       justify-self: start;
@@ -251,9 +309,10 @@ export class GridLegend {
   protected readonly open = signal(readLegendOpen());
 
   /** The active codes in key order, so the summary reads the same as the key. */
-  protected readonly activeList = computed(() =>
-    LEGEND_BADGES.filter((e) => this.active().has(e.text)).map((e) => e.text),
+  protected readonly activeEntries = computed(() =>
+    LEGEND_BADGES.filter((e) => this.active().has(e.text)),
   );
+  protected readonly activeList = computed(() => this.activeEntries().map((e) => e.text));
   protected readonly activeCodes = computed(() => this.activeList().join(', '));
 
   protected isActive(e: LegendBadge): boolean {
