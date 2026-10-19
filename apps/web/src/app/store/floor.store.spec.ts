@@ -207,6 +207,30 @@ describe('FloorStore derived lastResults', () => {
   });
 });
 
+describe('FloorStore activeBadges', () => {
+  it('is the badge codes of robots on the floor now, and empty before the floor loads', async () => {
+    const state = floorState({ robots: [robot('R1', 2, 2), robot('R2', 3, 3)], tick: 1 });
+    const tick = entry(
+      2,
+      {
+        type: 'TICK_RESOLVED',
+        tick: 1,
+        results: [
+          tickResult('R1', { outcome: 'BLOCKED', reason: 'WALL' }),
+          tickResult('R2', { outcome: 'MOVED' }),
+          // Not on the floor: its badge must not count.
+          tickResult('R3', { outcome: 'BLOCKED', reason: 'CONTESTED' }),
+        ],
+      },
+      1,
+    );
+    const ctx = setup(floorDto({ version: 2, state }), [CREATED, tick]);
+    expect(ctx.store.activeBadges().size).toBe(0);
+    await ctx.store.init();
+    expect([...ctx.store.activeBadges()]).toEqual(['WL']);
+  });
+});
+
 describe('FloorStore rejections', () => {
   it('flags the toast stale when the rejection floor is newer than the version held at send time', async () => {
     const ctx = setup();

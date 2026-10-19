@@ -15,6 +15,7 @@ import {
 import {
   CLIENT_MESSAGES,
   STALE_DETAIL,
+  activeBadgeCodes,
   announceTick,
   eventLine,
   floorResetMessage,
@@ -103,6 +104,11 @@ export class FloorStore {
   readonly lastResults = computed<Map<RobotId, RobotTickResult>>(() => {
     const state = this.state();
     return state ? deriveLastResults(this.history(), state) : new Map();
+  });
+  /** Badge codes on the floor now (from the robots that are here), for the key's highlight. */
+  readonly activeBadges = computed<ReadonlySet<string>>(() => {
+    const state = this.state();
+    return state ? activeBadgeCodes(state.robots, this.lastResults()) : new Set<string>();
   });
 
   // --- internals ------------------------------------------------------------

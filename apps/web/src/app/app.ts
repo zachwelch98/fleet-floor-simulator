@@ -6,6 +6,7 @@ import { CommandPad } from './ui/command-pad';
 import { ConnectionBadge } from './ui/connection-badge';
 import { Controls } from './ui/controls';
 import { FloorGrid } from './ui/floor-grid';
+import { GridLegend } from './ui/grid-legend';
 import { HistoryLog } from './ui/history-log';
 import { NewFloorDialog } from './ui/new-floor-dialog';
 import { RobotList } from './ui/robot-list';
@@ -22,6 +23,7 @@ import { Toasts } from './ui/toasts';
     ConnectionBadge,
     Controls,
     FloorGrid,
+    GridLegend,
     HistoryLog,
     NewFloorDialog,
     RobotList,

@@ -58,20 +58,26 @@
   }
 
   <main class="layout">
-    <section class="grid-col" aria-label="Floor">
-      <app-floor-grid
-        [state]="state"
-        [selectedId]="store.selectedId()"
-        [editMode]="store.editMode()"
-        [gotoArmed]="store.gotoArmed()"
-        [lastResults]="store.lastResults()"
-        [disabled]="!store.connected()"
-        (cellActivate)="store.activateCell($event)"
-      />
-      @if (scenarios.run(); as run) {
-      <app-scenario-results [run]="run" />
-      }
-    </section>
+    <div class="main-col">
+      <section class="grid-col" aria-label="Floor">
+        <app-floor-grid
+          [state]="state"
+          [selectedId]="store.selectedId()"
+          [editMode]="store.editMode()"
+          [gotoArmed]="store.gotoArmed()"
+          [lastResults]="store.lastResults()"
+          [disabled]="!store.connected()"
+          (cellActivate)="store.activateCell($event)"
+        />
+        @if (scenarios.run(); as run) {
+        <app-scenario-results [run]="run" />
+        }
+      </section>
+
+      <aside class="key-col" aria-label="Floor key">
+        <app-grid-legend [active]="store.activeBadges()" />
+      </aside>
+    </div>
 
     <aside class="sidebar">
       <app-scenario-panel
