@@ -771,3 +771,11 @@ The newest block is first in DOM order.
 6. **Auto-select after placing:** confirmed; `CommandSuccess.history` includes `ROBOT_PLACED`.
 
 All 33 design decisions in section 11 are accepted.
+
+**PM rulings after the Phase 3 review fixes (2026-10-18):**
+- The connection badge keeps its word at every width, including "Connected" on phones (§3.5,
+  rule 0: never color alone). At 320px the header wraps to three lines; that is accepted.
+- "Playing every N ms" is hidden below 900px so it can't reflow the phone toolbar; the Pause
+  label and the interval value carry the state there. Accepted.
+- Desktop toasts sit bottom right and may cover the end of the History panel for their lifetime.
+  Accepted.
