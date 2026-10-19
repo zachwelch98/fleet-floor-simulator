@@ -346,6 +346,8 @@ Under 24px cells it shrinks to a 7px dot (text hidden; `title` and the list rema
 
 ### 4.5 Legend
 
+*Superseded by DECISIONS 5.9: the legend is now a collapsible grouped key block under the status line (`grid-legend`), built from `LEGEND_BADGES`. The text below is the original design.*
+
 A one-line legend in the status line under the grid, shown when no banner is active (`grid-legend`; on mobile it wraps to several lines):
 "▲ robot (arrow = facing) · hatched = obstacle · ring = GOTO target (solid = heading there, dashed = queued) · badge = last tick: WL wall, OB obstacle, CT contested, HO head-on, OC occupied, BB blocked behind, WT waiting, UN unreachable, AR arrived, OK reached GOTO."
 

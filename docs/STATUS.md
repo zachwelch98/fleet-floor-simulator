@@ -22,6 +22,11 @@ phase gate. Commit it along with the work it describes.
   Pending: PM merge with the Tester's `e2e/tests/upload.spec.ts` and engine trace tests, then verify.
   Two existing e2e files were touched: `scenarios.spec.ts` (a Step in another tab now flags the run
   instead of passing it) and `layout.spec.ts` (the spill check ignores zero-size, non-rendered boxes).
+- **Grid key (2026-10-19, branch `worktree-agent-a4be14829dce07542`, not merged):** the text legend is
+  now `ui/grid-legend.ts`, a collapsible grouped key under the status line that highlights the badges
+  on the floor (`LEGEND_BADGES` in `core/copy.ts` is the single source; `.pill` is shared with the grid
+  badges). `--grid-chrome-y` and the status-line min-heights recomputed. `e2e/tests/legend.spec.ts`.
+  DECISIONS 5.9. Pending: PM review of screenshots and merge.
 - **Test-infra note:** supertest opens one socket per request. Thousands of requests in quick
   succession can exhaust ephemeral ports (EADDRNOTAVAIL). Bulk setup should use
   `stepManyPooled` (keep-alive fetch) in `apps/api/test/support.ts`.

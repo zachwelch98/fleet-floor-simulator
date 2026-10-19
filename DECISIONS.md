@@ -320,6 +320,29 @@ each `REPORT`. The CLI already takes any path, so it is unchanged. **Decisions:*
   try/catch, so with storage blocked or full they stay in memory for the session. Uploads are per
   browser, not shared between users.
 
+### 5.9 The key under the floor *(UI behaviour, extra)*
+The one-line text legend in the status line is replaced by a grouped visual key (`ui/grid-legend.ts`).
+**Decisions:**
+- **One table.** `LEGEND_BADGES` (`core/copy.ts`) lists every badge the floor can show (the six
+  block reasons WL OB CT HO OC BB, then WT UN AR OK). `badgeFor` reads the same table, so the grid
+  and the key cannot drift apart; a unit test checks every block reason and badge-producing outcome
+  is in the key.
+- **Real symbols.** Groups "On the grid" (robot token, hatched obstacle, solid and dashed GOTO ring),
+  "Blocked last tick" and "GOTO last tick". Badges are drawn with the same pill as the grid (the
+  global `.pill` class in `styles.css`), a little larger.
+- **Highlights what is on the floor now.** Entries whose code is on a badge of a robot that is on
+  the grid get `data-active="true"` (outline); while at least one is active the other pills dim to
+  55%. Only the pill dims, the text keeps full contrast. With none active everything is at full
+  strength. Collapsed, the summary reads "Key · CT, BB on the floor".
+- **Collapsible, remembered.** A `<details>`, open by default; the choice is kept in `localStorage`
+  (`fleet.legendOpen.v1`), every access in a try/catch, open when storage is blocked or unreadable.
+- **Placement.** The status line holds only the banners and the empty-floor hint. The key is its own
+  block below it (not shown on an empty floor, as the legend was not), so banners no longer replace
+  or shift it; scenario checkpoints follow. It reserves nothing in `--grid-chrome-y`: the grid is
+  sized without it and the already-scrolling grid column holds the key. From 1200px the status line
+  is one banner line (30px); between 900 and 1199px, where a banner wraps next to the sidebar, it
+  reserves two (50px). At 1280x720 a 20x20 floor's cells are 1px larger than before.
+
 ---
 
 ## 6. Persistence
