@@ -134,6 +134,8 @@
   /* ---- 3. Layout and cell sizing --------------------------------------- */
   --breakpoint-desktop: 900px; /* documentation only: custom properties can't be used in @media */
   --sidebar-w: 360px;
+  --key-w: 15rem; /* the key column, from 1200px up (DECISIONS 5.9) */
+  --key-rail-w: 4.5rem; /* the key column while the key is collapsed: "Key" + the active codes */
   --axis-size: 24px; /* width of y labels / height of x labels */
   --cell-min: 12px; /* 20 columns still fit a 320px screen without page scroll */
   --cell-max: 56px; /* 10x8 on a big monitor */
@@ -144,13 +146,22 @@
   --grid-chrome-y: 120px;
 }
 
-/* Desktop: sidebar + gap + page padding + y axis; header + toolbar + status line + x axis + padding. */
+/* Desktop (900-1199px): sidebar + gap + page padding + y axis; header + toolbar + status line + x axis + padding. */
 @media (min-width: 900px) {
   :root {
     --grid-chrome-x: calc(
       var(--sidebar-w) + var(--space-5) + 2 * var(--space-4) + var(--axis-size)
     );
     --grid-chrome-y: 196px;
+  }
+}
+
+/* From 1200px the key is a third column on the left: its width and one more gap. */
+@media (min-width: 1200px) {
+  :root {
+    --grid-chrome-x: calc(
+      var(--key-w) + var(--sidebar-w) + 2 * var(--space-5) + 2 * var(--space-4) + var(--axis-size)
+    );
   }
 }
 

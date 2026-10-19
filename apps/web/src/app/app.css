@@ -75,7 +75,14 @@
   flex: 1;
   min-height: 0;
 }
-.grid-col {
+.main-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.grid-col,
+.key-col {
   min-width: 0;
 }
 .sidebar {
@@ -96,7 +103,10 @@
     gap: var(--space-5);
     overflow: hidden;
   }
-  .grid-col {
+  /* 900-1199px: two columns. The grid column holds the grid, the checkpoints, then the key, and
+     scrolls as one. */
+  .main-col {
+    min-height: 0;
     overflow: auto;
   }
   /* Backstop: if the panes cannot all fit (short window), the sidebar scrolls as one column instead
@@ -116,5 +126,38 @@
   .history-wrap {
     flex: 1;
     min-height: 200px;
+  }
+}
+
+/* From 1200px: three columns, key | grid + checkpoints | sidebar. `.main-col` drops out of the box
+   tree so its children are grid items of `.layout`, and the key (after the checkpoints in the DOM,
+   where the narrower layouts want it) is placed in column 1. One <app-grid-legend>, no duplicate. */
+@media (min-width: 1200px) {
+  .layout {
+    grid-template-columns: var(--key-w) minmax(0, 1fr) var(--sidebar-w);
+  }
+  /* The key folds to a slim rail (DECISIONS 5.9) and the grid column takes the width back. The
+     grid's own cell sizing reads --key-w too (floor-grid.css). */
+  .layout:has(.key-col details:not([open])) {
+    --key-w: var(--key-rail-w);
+  }
+  .main-col {
+    display: contents;
+  }
+  .key-col {
+    grid-column: 1;
+    grid-row: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .grid-col {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 0;
+    overflow: auto;
+  }
+  .sidebar {
+    grid-column: 3;
+    grid-row: 1;
   }
 }

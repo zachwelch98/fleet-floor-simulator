@@ -12,9 +12,19 @@
     --grid-chrome-x: calc(
       var(--sidebar-w) + var(--space-5) + 2 * var(--space-4) + var(--axis-size) + var(--title-size)
     );
-    /* tokens.css estimate + axis title row. The key lives below the grid now, so it reserves
-       nothing here (the column scrolls). The status line only holds one banner line. */
+    /* tokens.css estimate + axis title row. The key is not under the grid (its own column, or
+       below the checkpoints), so it reserves nothing here. */
     --grid-chrome-y: calc(196px + var(--title-size));
+  }
+}
+
+@media (min-width: 1200px) {
+  :host {
+    /* Three columns: the key column (--key-w, or the rail while it is collapsed) and one more gap. */
+    --grid-chrome-x: calc(
+      var(--key-w) + var(--sidebar-w) + 2 * var(--space-5) + 2 * var(--space-4) + var(--axis-size) +
+        var(--title-size)
+    );
   }
 }
 
