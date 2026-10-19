@@ -15,6 +15,13 @@ phase gate. Commit it along with the work it describes.
 - **Blocked on the user:** (1) git identity / author email before the public push; (2) reword the
   AI_USAGE entries marked "drafted by Claude"; (3) confirm the push (new public GitHub repo).
   After the push: watch the first CI run and add the badge to the README.
+- **Upload scenarios (2026-10-19, branch `worktree-agent-a2962cd797ec8624b`, not merged):** engine
+  `traceScenario`; web scenario model on the trace (any file builds); `UploadsStore` (localStorage);
+  client-driven script player in `ScenarioStore` (Play/Pause/Step walk the script, interference stops
+  the run as "modified"); upload controls, runner output and ignored lines in the UI. DECISIONS 5.8.
+  Pending: PM merge with the Tester's `e2e/tests/upload.spec.ts` and engine trace tests, then verify.
+  Two existing e2e files were touched: `scenarios.spec.ts` (a Step in another tab now flags the run
+  instead of passing it) and `layout.spec.ts` (the spill check ignores zero-size, non-rendered boxes).
 - **Test-infra note:** supertest opens one socket per request. Thousands of requests in quick
   succession can exhaust ephemeral ports (EADDRNOTAVAIL). Bulk setup should use
   `stepManyPooled` (keep-alive fetch) in `apps/api/test/support.ts`.

@@ -2,8 +2,8 @@ import { expect, test } from '@playwright/test';
 import { cell, openApp, pressStep, resetFloor, send, toast } from './helpers.js';
 
 /**
- * Scenario picker: Load sets the shared floor up with ordinary commands, Play (or Step) runs it on
- * the server, and the checkpoint panel checks each REPORT as its tick resolves. The only spec that
+ * Scenario picker: Load sets the shared floor up with ordinary commands, Play (or Step) walks the
+ * script from the browser (one server Step per tick), and each REPORT is checked as its tick lands. The only spec that
  * presses Play: it waits for the panel's own result, never for a fixed time.
  */
 test.beforeEach(async ({ request }) => {
@@ -16,7 +16,7 @@ test.afterEach(async ({ request }) => {
 });
 
 test.describe('scenario picker', () => {
-  test('brief e: Load, Play, both checkpoints pass, the run auto-pauses with R1 2,2,SOUTH and R2 3,1,EAST', async ({
+  test('brief e: Load, Play, both checkpoints pass, the run stops at the end with R1 2,2,SOUTH and R2 3,1,EAST', async ({
     page,
   }) => {
     await openApp(page);
@@ -47,8 +47,9 @@ test.describe('scenario picker', () => {
     await expect(page.getByTestId('checkpoint-0')).toHaveAttribute('data-status', 'pass');
     await expect(page.getByTestId('checkpoint-1')).toHaveAttribute('data-status', 'pass');
     await expect(page.getByTestId('scenario-hint')).toHaveCount(0);
-    // Auto-pause: the Play button flips back and the end positions stand.
+    // The script player ends by itself: the Play button flips back and the end positions stand.
     await expect(page.getByTestId('btn-play')).toHaveAttribute('data-playing', 'false');
+    await expect(page.getByTestId('checkpoint-1')).toContainText('R2 3,1,EAST');
     await expect(page.getByTestId('robot-R1')).toHaveAttribute('data-x', '2');
     await expect(page.getByTestId('robot-R1')).toHaveAttribute('data-y', '2');
     await expect(page.getByTestId('robot-R1')).toHaveAttribute('data-facing', 'SOUTH');
@@ -102,9 +103,11 @@ test.describe('scenario picker', () => {
     await expect(tabA.getByTestId('scenario-title')).toHaveCount(1);
     await expect(tabB.getByTestId('scenario-title')).toHaveCount(0);
 
-    // Head-on swap is blocked: the other tab pressing Step is enough for tab A's checkpoint.
+    // The run is driven from tab A. A Step pressed in tab B changes the floor under it, so tab A
+    // flags the run as modified instead of counting that tick (DECISIONS 5.8).
     await pressStep(tabB);
-    await expect(tabA.getByTestId('scenario-summary')).toHaveText('1 / 1 passed');
+    await expect(tabA.getByTestId('scenario-modified')).toBeVisible();
+    await expect(tabA.getByTestId('scenario-summary')).toHaveText('0 / 1 passed');
   });
 
   test('an edit after loading is flagged, and a new floor from elsewhere ends the run', async ({

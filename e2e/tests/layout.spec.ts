@@ -86,7 +86,11 @@ async function measure(page: Page): Promise<SidebarMetrics> {
       for (const d of Array.from(el.querySelectorAll('*'))) {
         const pos = getComputedStyle(d).position;
         if (pos === 'absolute' || pos === 'fixed') continue;
-        const over = d.getBoundingClientRect().bottom - r.bottom;
+        const dr = d.getBoundingClientRect();
+        // Boxes that are not rendered (display: none: <option>s of a closed select, hidden file
+        // inputs) report an all-zero rect, which is "below" a pane that is scrolled above the viewport.
+        if (dr.width === 0 && dr.height === 0) continue;
+        const over = dr.bottom - r.bottom;
         if (over <= 1) continue;
         let clipped = false;
         for (let a = d.parentElement; a && a !== el.parentElement; a = a.parentElement) {

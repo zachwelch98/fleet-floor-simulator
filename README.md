@@ -44,6 +44,7 @@ Open two tabs to see Module D: changes, ticks and Play/Pause sync live between t
 | Toggle obstacles | turn on "Edit obstacles", then click cells |
 | Advance | Step (one tick), or Play / Pause with the interval slider |
 | Load a scenario | pick one under "Scenarios" (the five brief examples plus a few more) and press Load, then Play or Step: each `REPORT` shows as a checkpoint that turns ✓ or ✗, and Play stops after the last |
+| Upload your own scenario | "Upload scenario…" takes any `.txt` in the brief's §1.5 format, under any file name (optionally "Attach expected…" for its `.expected`). The page shows what `npm run scenario -- <file>` prints, then Play runs the same script on the live floor and checks it. Uploads stay in this browser |
 | Clear a queue / delete a robot / new floor | buttons in the robot row / toolbar |
 | Cancel GOTO, then deselect | Esc |
 
@@ -62,6 +63,10 @@ and prints every `REPORT` to stdout and nothing else. Invalid lines are skipped 
 file: the brief's five examples plus edge cases (contests, chains, rotations, a contest breaking a
 rotation, R2 vs R10, FLOOR resets, parser tolerance, GOTO tie-breaks and UNREACHABLE). The test
 suite runs every one through the real CLI and compares stdout byte for byte.
+
+In the app, Play and Step on a loaded scenario walk the script from the browser, one server Step per
+tick, with later commands (including ones after a `TICK`) sent between ticks, so any scenario file
+runs live. The runner's output, the ignored lines and the live checks are shown under the floor.
 
 ## Verify
 

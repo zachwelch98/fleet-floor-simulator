@@ -263,18 +263,14 @@ FIFO as every other command. No new endpoint and no change to the engine or prot
 (Module D), and the history shows exactly what happened.
 - **Implicit 5×5.** A file with no `FLOOR` line (brief b, c, d) gets `CREATE_FLOOR 5,5` first, the
   scenario default (1.5), because the shared floor is normally 10×8.
-- **Setup only before the first `TICK`.** Play drives the ticks, so an action line after a `TICK`
-  cannot be injected mid-run; such a file fails to build (a unit test covers it). The curated list
-  avoids it. Lines the engine rejects are dropped, as the runner ignores them.
-- **Checkpoints come from the server's `TICK_RESOLVED` history:** the entry at load tick plus the
-  cumulative `TICK` count, read as `to` + `facing` per robot and printed with the runner's own
-  `formatReport`. The `.expected` file is split per `REPORT`, and a test checks it matches the
-  engine runner. Because results are matched by tick number, a missed socket frame or an extra tick
-  before the auto-pause lands changes nothing.
-- **Local to the tab.** The panel lives in the tab that pressed Load. A non-tick change after the
-  load flags the run "edited, results may not match"; a `FLOOR_CREATED` from elsewhere ends it.
-- **Auto-pause** after the last checkpoint resolves, once per run (Play pressed afterwards is left
-  alone).
+- **Setup only before the first `TICK`.** *(Superseded by 5.8: the script player sends later
+  commands between ticks, so any file builds.)* Lines the engine rejects are dropped, as the runner
+  ignores them.
+- **Checkpoints.** *(5.8 reads them from the floor after each step instead of the server history,
+  and replaces the auto-pause: Play ends by itself when the script does.)* The `.expected` file is
+  cut per `REPORT` by the runner's report sizes, and a test checks it matches the engine runner.
+- **Local to the tab.** The panel lives in the tab that pressed Load. A change to the floor from
+  elsewhere stops the run as "edited, results may not match"; a `FLOOR_CREATED` from elsewhere ends it.
 - **Bundling:** the files in `scenarios/` are imported as text through the esbuild `loader` option
   in `apps/web/angular.json`, so the picker and the golden tests share one copy.
 - **Addendum (layout):** the first version put the title and every checkpoint in the sidebar. With
@@ -287,6 +283,42 @@ FIFO as every other command. No new endpoint and no change to the engine or prot
   as one column instead of clipping; Robots and History keep their 200px minimums (UI_SPEC 1.1).
   The sidebar's width and position do not depend on the floor size. `e2e/tests/layout.spec.ts`
   guards all of this at 1280x720, 1440x900 and 390x844.
+
+### 5.8 Uploaded scenarios and the client-side script player *(extra)*
+Any `.txt` scenario, under any file name, can be uploaded from the Scenarios pane. The page shows what
+`npm run scenario -- <file>` prints for it, then Play runs the same script on the live floor and checks
+each `REPORT`. The CLI already takes any path, so it is unchanged. **Decisions:**
+- **One traced runner.** `traceScenario(text)` (engine, `scenario/run.ts`) runs the file through
+  `apply` and returns the REPORT blocks, the ignored lines (parse errors with `invalid.why`, engine
+  rejections with the engine's message, each with its 1-based line number) and the replayable steps:
+  the accepted actions, one `tick` per tick (`TICK N` is N steps) and a marker per REPORT, starting
+  with `CREATE_FLOOR` (the implicit 5x5 one unless the first accepted step is a `FLOOR` line).
+  `runScenario` is `traceScenario(...).reports.flat()`, so the CLI output and the golden tests are
+  unchanged. Built-in and uploaded scenarios use the same model (`buildScenario`).
+- **Mid-script commands work.** Load sends the actions up to the first tick and reads any REPORT
+  before it straight from the floor. Play and Step then drive the script from this tab: Step sends the
+  actions before the next tick, the tick (one server Step), and reads the REPORTs that follow it;
+  Play does that once per tick interval (the slider). Actions after the last tick are flushed with that
+  step. The server's own Play is never used during an unfinished run, so pacing and command order are
+  exact. Pause stops between steps; with no unfinished run, Play, Pause and Step are the server's.
+- **REPORTs are read from the floor the tab holds right after the previous answer**, not from the
+  history, so a missed socket frame cannot change a result.
+- **Interference.** If an answer's floor version is not the previous version + 1, or the floor changes
+  or server Play starts from elsewhere while the run is unfinished, the run stops and is marked
+  "modified" (the existing note). A refused command stops it as "failed". A new floor created from
+  elsewhere still ends the run. A finished run is not flagged by later edits.
+- **Expected file.** Optional (`.expected`, attached per upload). Without it the runner's output is
+  the expected. With it, each checkpoint compares live against the file, and a checkpoint where the
+  runner differs from the file is marked "Runner ≠ expected". A total line-count mismatch is a
+  warning on the scenario, not an error (the blocks are cut by the runner's report sizes).
+- **Invalid lines** are listed (line number, text, reason) in a collapsible "Ignored lines (n)"; the
+  run goes ahead, as the runner does.
+- **Limits.** Over 1,000 ticks the live run is refused with a note (the floor is left alone; runner
+  output and checks still show, live "not run"). Uploads are 64 KB per file, 20 uploads, and a script
+  with over 20,000 ticks is refused outright (tracing it would freeze the tab).
+- **Storage.** Uploads live in `localStorage` (`fleet.scenarioUploads.v1`), every read and write in a
+  try/catch, so with storage blocked or full they stay in memory for the session. Uploads are per
+  browser, not shared between users.
 
 ---
 
