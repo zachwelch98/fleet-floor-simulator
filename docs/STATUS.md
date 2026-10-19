@@ -10,17 +10,17 @@ phase gate. Commit it along with the work it describes.
 
 ## Current position (2026-10-18)
 
-- **State:** **Phase 2 work complete; awaiting the Phase 2 gate with the user.** Tester (part 2)
-  merged (158 new API tests). PM mutation spot-check: 10/10 injected API bugs caught.
-  `npm run verify` green: 677 engine + 189 API tests (1 skipped on purpose: the Phase 3 pause test).
-- **Working tree:** clean on `main`. `npm run verify:fast` is green (677 engine tests, typecheck,
-  lint, format). `npm test -w @fleet/api` is green (31 passed, 1 skipped on purpose; see below).
-- **Phase 2 is done except one item:** the Tester's API integration tests (only `api-boot` exists).
-- **Next action:** Phase 2 gate with the user. After approval: Phase 3 (PM scaffolds `apps/web`
-  and installs all deps incl. Playwright on `main`, then spawns Dev 2, Dev 3, Tester, Designer).
+- **State:** **Phase 3 in progress.** Phase 2 gate approved by the user. PM scaffold done
+  (`apps/web` Angular 22.2, `e2e/` Playwright 1.64 + Chromium, root `npm run dev`,
+  `TickTimer` contract, DECISIONS 7.5–7.7). Full `npm run verify` green incl. web unit + E2E smoke.
+- **Running:** Dev 2 (scheduler + gateway + play/pause), Dev 3 (Angular UI), Tester (real-time
+  integration + Playwright E2E). All Sonnet, each in its own worktree.
+- **Next action:** merge in order Dev 2 → Tester (real-time tests should go green) → Dev 3 →
+  rerun E2E; triage failures. Then spawn the **Designer** to review the UI against the spec.
+  Then the Phase 3 gate (full `verify`, 3 consecutive green runs).
 - **Test-infra note:** supertest opens one socket per request. Thousands of requests in quick
   succession can exhaust ephemeral ports (EADDRNOTAVAIL). Bulk setup should use
-  `stepManyPooled` (keep-alive fetch) in `apps/api/test/support.ts`. Tell the Phase 3 Tester.
+  `stepManyPooled` (keep-alive fetch) in `apps/api/test/support.ts`.
 
 ## Resume checklist
 
@@ -96,16 +96,17 @@ The Tester was briefed with this list. Shared helpers already exist in
 - [x] Designer: `docs/design/UI_SPEC.md` + `tokens.css` (PM answers in spec §12)
 - [x] **Gate** approved 2026-10-18
 
-### Phase 2: GOTO + API (awaiting gate)
+### Phase 2: GOTO + API ✅
 - [x] Dev 1: GOTO (`pathfinding.ts`, `planGotoStep`), CLEAR_QUEUE resets the counter
 - [x] Dev 2: NestJS API + SQLite (normalized tables + latest snapshot + actions + events), REST per protocol, `createApp`, `inspectFloor`
 - [x] Tester (part 1): 61 GOTO tests + 21 GOTO golden scenarios, all green against the real engine on first run (written black-box); `api-boot.test.ts`
 - [x] PM end-to-end smoke on the built server: GOTO detour, 409 rejection, restart persistence
 - [x] Tester (part 2): 158 API integration tests (commands incl. exhaustive 409 reasons + concurrency, history, persistence, three-way consistency incl. after restart). No API bugs found
 - [x] PM: API mutation spot-check: 10/10 caught (skip version check, skip snapshot upsert, 409→200, history order, `after` off-by-one, limit clamp 0, high-water mark, GOTO counter, version +2 on TICK, skip action log)
-- [ ] **Gate**
+- [x] **Gate** approved 2026-10-18
 
-### Phase 3: real-time + UI
+### Phase 3: real-time + UI (in progress)
+- [x] PM: scaffold `apps/web` (deps incl. socket.io-client), `e2e/` workspace (Playwright + Chromium, harness on :3100/:4300, smoke test), `scripts/dev.mjs`, `TickTimer`/`ManualTickTimer` contract + `AppOptions.timer`, DECISIONS 7.5–7.7, protocol: join acks `null` for unknown floor
 - [ ] Dev 2: `TickScheduler` (one timer per floor, injected timer for tests) + socket.io `FloorGateway` + `POST play|pause`. Hooks are ready: subscribe the gateway to `FloorsService.committed` (emits `{floor, history}` = `FloorUpdatedPayload`); the scheduler calls `FloorsService.step()`; fill `playing`/`intervalMs` in `FloorsService.toDto` (the only place a FloorDto is built). Register providers in `AppModule.register`.
 - [ ] Dev 3: Angular 22 app in `apps/web` per `docs/design/UI_SPEC.md` (test-id catalog in §10). The PM should scaffold `apps/web` and install all deps first (same reason as `apps/api`: no lockfile conflicts between parallel agents).
 - [ ] Tester: real-time integration tests (two socket.io clients; `socket.io-client` already installed) + Playwright E2E (Step only, no Play timing; Playwright **not yet installed**). Un-skip the pause test.
@@ -121,17 +122,16 @@ The Tester was briefed with this list. Shared helpers already exist in
 
 ## Agents
 
-None running. Tester (part 2) finished and was merged; worktree and branch removed.
-Commits use the `GIT_AUTHOR_*`/`GIT_COMMITTER_*` env-var workaround (identity still unresolved). Agent IDs can't be resumed from a new session; re-spawn roles with the
-template in PLAN.md "Agent briefs" and the role details in PLAN.md "Team and orchestration".
+Running (2026-10-18, Sonnet, worktrees): **Dev 2**, **Dev 3**, **Tester** (Phase 3 briefs).
+Commits use the `GIT_AUTHOR_*`/`GIT_COMMITTER_*` env-var workaround (identity still unresolved).
 
 | Role | Last work | Notes for the next brief |
 |---|---|---|
 | Designer | UI spec + tokens (P1) | Phase 3: review Dev 3's UI against the spec |
 | Dev 1 Engine | GOTO (P2) | Engine is complete for Modules core + A |
-| Dev 2 Runner+API | API + SQLite (P2) | Phase 3: TickScheduler + gateway; hooks listed above |
-| Dev 3 Frontend | not started | Phase 3 |
-| Tester | API integration tests (P2, done) | Phase 3: real-time + Playwright E2E; un-skip the pause test; use `stepManyPooled` for bulk setup |
+| Dev 2 Runner+API | P3 running: scheduler + gateway | |
+| Dev 3 Frontend | P3 running: Angular UI | |
+| Tester | P3 running: real-time + E2E | Its new tests fail on its own branch by design ("not implemented") |
 
 **Lessons from running agents (apply to future briefs):**
 - `npm install` in a worktree touches `package-lock.json` by one line. Tell agents to revert it and never commit it.
@@ -165,3 +165,4 @@ template in PLAN.md "Agent briefs" and the role details in PLAN.md "Team and orc
 - 2026-10-18: Phase 1 gate approved. PM scaffolded `apps/api` (deps pre-installed; `createApp`/`inspectFloor` contracts). Phase 2 agents spawned.
 - 2026-10-18: Dev 1 GOTO merged (DECISIONS 3.9). Dev 2 API merged (DECISIONS 6.1b/6.1c). PM end-to-end smoke OK.
 - 2026-10-18: **Paused by the user.** Tester wrapped up gracefully: GOTO tests + scenarios + api-boot merged; 677 engine tests green; pause test skipped (Phase 3). DECISIONS 3.10. All worktrees/branches removed. Git identity issue noted.
+- 2026-10-18: **Phase 2 gate approved.** PM Phase 3 scaffold (web, e2e, dev script, TickTimer contract, DECISIONS 7.5–7.7); verify green. Dev 2, Dev 3, Tester spawned.
