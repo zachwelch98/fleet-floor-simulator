@@ -8,11 +8,11 @@ phase gate. Commit it along with the work it describes.
 
 ---
 
-## Current position (paused 2026-10-18)
+## Current position (resumed 2026-10-18)
 
-- **State:** **paused by the user mid-Phase 2.** All agents were shut down gracefully: each one
-  committed its work, every branch is merged into `main`, and all agent worktrees and branches are
-  removed. No agents are running, and there is nothing to recover from worktrees.
+- **State:** **resumed mid-Phase 2.** Resume checklist passed (clean tree, 677 engine tests,
+  API 31 passed / 1 skipped, context map rebuilt). **Tester (part 2) spawned** in a worktree to
+  write the API integration tests; awaiting its report.
 - **Working tree:** clean on `main`. `npm run verify:fast` is green (677 engine tests, typecheck,
   lint, format). `npm test -w @fleet/api` is green (31 passed, 1 skipped on purpose; see below).
 - **Phase 2 is done except one item:** the Tester's API integration tests (only `api-boot` exists).
@@ -124,8 +124,8 @@ The Tester was paused with these unwritten. Shared helpers already exist in
 
 ## Agents
 
-None running. All were shut down gracefully on 2026-10-18 after committing; branches merged and
-worktrees removed. Agent IDs can't be resumed from a new session; re-spawn roles with the
+**Tester** running (worktree, Sonnet): Phase 2 API integration tests (items 1–5 below).
+Commits use the `GIT_AUTHOR_*`/`GIT_COMMITTER_*` env-var workaround (identity still unresolved). Agent IDs can't be resumed from a new session; re-spawn roles with the
 template in PLAN.md "Agent briefs" and the role details in PLAN.md "Team and orchestration".
 
 | Role | Last work | Notes for the next brief |
