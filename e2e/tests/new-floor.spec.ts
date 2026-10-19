@@ -106,6 +106,7 @@ test.describe('new floor dialog', () => {
   }) => {
     await openApp(page);
     await cell(page, 5, 3).click();
+    await expect(page.getByTestId('robot-R1')).toHaveAttribute('data-selected', 'true');
     await page.keyboard.press('ArrowUp');
     await expect(page.getByTestId('queue-R1')).toHaveAttribute('data-length', '1');
     await page.getByTestId('btn-step').click();

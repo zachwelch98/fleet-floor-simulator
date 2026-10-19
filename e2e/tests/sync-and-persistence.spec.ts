@@ -178,9 +178,9 @@ test.describe('persistence', () => {
     await expect(page.getByTestId('queue-R2')).toHaveAttribute('data-length', '0');
     // History and the badges derived from it survived.
     const [tick] = await entriesOfType(request, baseline, 'TICK_RESOLVED');
-    await expect(tickGroup(page, tick!).getByTestId('history-entry')).toContainText(
-      'R2 blocked at (9,7): the floor edge is ahead.',
-    );
+    await expect(
+      tickGroup(page, tick!).locator('[data-testid="history-entry"][data-robot="R2"]'),
+    ).toContainText('R2 blocked at (9,7): the floor edge is ahead.');
     await expect(page.getByTestId('badge-R2')).toHaveAttribute('data-reason', 'WALL');
     await expect(page.getByTestId('last-result-R1')).toHaveAttribute('data-outcome', 'MOVED');
     // UI preferences did not (UI_SPEC 0.6).
@@ -192,6 +192,7 @@ test.describe('persistence', () => {
   test('what the UI did survives a refresh: placement, obstacle, queue, Step', async ({ page }) => {
     await openApp(page);
     await cell(page, 5, 1).click();
+    await expect(page.getByTestId('robot-R1')).toHaveAttribute('data-selected', 'true');
     await page.keyboard.press('ArrowUp');
     await page.keyboard.press('ArrowRight');
     await expect(page.getByTestId('queue-R1')).toHaveAttribute('data-length', '2');
