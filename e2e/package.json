@@ -1,0 +1,14 @@
+{
+  "name": "@fleet/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright end-to-end tests: built API + built web app, Step-driven (no Play timing).",
+  "scripts": {
+    "e2e": "playwright test",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
+  }
+}

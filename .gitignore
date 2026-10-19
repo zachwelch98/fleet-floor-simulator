@@ -15,3 +15,6 @@ playwright-report/
 .claude/context-map.md
 Fleet_Floor_Simulator_Brief.pdf
 .claude/worktrees/
+
+# Playwright E2E output and per-run databases
+e2e/.tmp/
