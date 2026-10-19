@@ -71,8 +71,8 @@ Use `<meta name="viewport" content="width=device-width, initial-scale=1">`; neve
 
 `#` = obstacle, `(+)` = GOTO target marker, `▲▶` = robots with facing arrows, `y` / `x` = axis titles.
 
-- Left column (flexible): the grid with axes, and below it one reserved **status line** (28px) that shows the edit banner, or the GOTO banner, or otherwise the legend. Because the line is always reserved, toggling edit mode never resizes the grid. The offline banner (rare) renders between toolbar and grid and may shift the layout.
-- Right column (fixed 360px, `--sidebar-w`): selection panel / command pad on top (about 110px), the Robots panel (max 35% of the remaining height), and History filling the rest. Each panel scrolls inside itself; the page does not scroll on a laptop.
+- Left column (flexible): the grid with axes, and below it one reserved **status line** (min-height 48px, enough for a two-line banner or legend) that shows the edit banner, or the GOTO banner, or otherwise the legend. Because the line is always reserved, toggling edit mode never resizes the grid. The offline banner (rare) renders between toolbar and grid and may shift the layout.
+- Right column (fixed 360px, `--sidebar-w`): selection panel / command pad on top (about 170px with its hint line), the Robots panel, and History. Robots and History each get at least 200px; Robots takes at most 45% of the remaining height. Panel headings stay visible while the panel body scrolls. Each panel scrolls inside itself; the page does not scroll on a laptop.
 - The command pad sits in the sidebar so the grid column only has to spare height for header, toolbar, axis and status line. The clamp in `tokens.css` then gives a 20×20 floor cells of about 22px on a 1366×768 laptop (no scrolling) and a 10×8 floor cells up to 56px.
 
 ### 1.2 Mobile (< 900px, designed at 375px)
@@ -121,7 +121,7 @@ Single column, in this order. Page scrolls vertically only.
 ### 1.3 Grid sizing rules
 
 - `--cell-size` comes from the `.floor-grid` rule in `tokens.css`; the grid element sets `--cols` and `--rows` inline from `state.width/height`.
-- Axis gutters are `--axis-size` (24px), outside the cells. Gridlines are 1px `--color-cell-line`. Cells are square.
+- Axis gutters are `--axis-size` (24px), outside the cells. The axis titles "x" and "y" take one extra 16px row (below the x labels) and column (left of the y labels); the desktop grid chrome is therefore about 20px taller than the first estimate. ▶ / ❚❚ on the Play button may be CSS `::before` glyphs. Gridlines are 1px `--color-cell-line`. Cells are square.
 
 ---
 
@@ -181,7 +181,7 @@ Outputs: `step`, `play(intervalMs)`, `pause`, `intervalChange(ms)`, `editModeCha
 |---|---|---|
 | Step | `<button>` "Step" (`btn-step`) | `POST /step`. Disabled while playing or not connected. |
 | Play / Pause | `<button>` (`btn-play`, `data-playing`) | Text "Play" with a ▶ glyph when paused, "Pause" with a ❚❚ glyph when playing. Paused: `POST /play` with `{intervalMs}`. Playing: `POST /pause`. Disabled when not connected. |
-| Interval | `<input type=range min=100 max=5000 step=100>` (`input-interval`) + text `interval-value` ("500 ms") | Label "Tick interval". Left = fast. Paused: only changes the local value (sent with the next Play). Playing: also re-sends `/play` with the new value, debounced 300 ms (the server restarts its one timer). Adopts the server's value when `floor:playback` arrives. |
+| Interval | `<input type=range min=100 max=5000 step=100>` (`input-interval`) + text `interval-value` ("500 ms") | Label "Tick interval". Left = fast. Paused: only changes the local value (sent with the next Play). Playing: also re-sends `/play` with the new value, debounced 300 ms (the server restarts its one timer). Adopts the server's `playing` and `intervalMs` only from a load/resync, `floor:updated`, `floor:playback` and the play/pause responses; it never jumps mid-debounce (a pending local change wins until its `/play` returns). The toolbar must not reflow when the "Playing every N ms" text appears: reserve its width or put it where it cannot push the controls. |
 | Edit obstacles | `<button aria-pressed>` styled as a switch (`toggle-edit`, `data-on`) | Label "Edit obstacles" plus state text "On" / "Off". Turning it on disarms GOTO. |
 | New floor | `<button>` "New floor…" (`btn-new-floor`) | Opens NewFloorDialog. Disabled when not connected. |
 
@@ -242,6 +242,8 @@ Container `toast-region` (`role="region"`, `aria-label="Notifications"`). Each t
 - Auto-dismiss after 6 s (error) or 4 s (info). Hover or keyboard focus inside pauses the timer.
 - At most 3 visible; a 4th removes the oldest. An identical toast (same reason and message) already visible restarts its timer instead of stacking.
 - **Stale detail**: if the rejection response's `floor.version` is greater than the floor version the client held when it *sent* the request, add `toast-detail` "Your view was out of date and has been updated." and `data-stale="true"`. This is Module D's "told why, and catches up". The authoritative `floor` from a rejection is always applied (rule 0.2).
+- A remote `FLOOR_RESET` / `ROBOT_REMOVED_REMOTE` toast is suppressed while this client's own request of the same type is in flight (the own response already tells the story).
+- Desktop toasts must not cover the header connection badge or the toolbar: anchor them to the bottom right of the viewport (over the sidebar's lower area), or below the toolbar. Mobile keeps the bottom.
 - Never steals focus.
 
 ### 3.7 `NewFloorDialog`
@@ -363,7 +365,8 @@ A one-line legend in the status line under the grid, shown when no banner is act
 | Normal | none | obstacle | Send `PLACE_ROBOT` anyway; the server answers `CELL_IS_OBSTACLE` → toast. |
 | Normal | Shift | any cell, a robot selected | Send `QUEUE_COMMANDS {id: selectedId, commands:[{kind:'GOTO', x, y}]}`. |
 | Normal | Shift | any cell, nothing selected | Toast `NO_ROBOT_SELECTED`. No request. |
-| Normal, GOTO armed | none | any cell | Same as Shift-click, then disarm. |
+| Normal, GOTO armed | none | empty cell or obstacle | Same as Shift-click, then disarm. |
+| Normal, GOTO armed | none | a robot (any robot, including the selected one) | Select that robot and disarm; no GOTO is sent. (Clicking a robot always means "select". To send a robot to a cell a robot occupies, use Shift-click or Shift+Enter.) |
 | Edit | any (Shift ignored) | not a robot | Send `TOGGLE_OBSTACLE {x, y}`. |
 | Edit | any | robot | Send `TOGGLE_OBSTACLE` anyway; the server answers `CELL_OCCUPIED` → toast (DECISIONS 5.3: ignored, with the reason shown). |
 | Offline | any | any | Nothing is sent; toast `OFFLINE`. (The grid has `pointer-events: none`; this is only reachable from the keyboard.) |
@@ -373,7 +376,8 @@ Other pointer actions:
 - `btn-clear-queue-{id}`: send `CLEAR_QUEUE {id}`. Disabled while that queue is empty.
 - `btn-delete-robot-{id}`: send `REMOVE_ROBOT {id}`. No confirmation (a robot is cheap to re-place; its ID is not reused, as the history shows). If it was selected, the selection clears.
 - `btn-cmd-move|left|right`: send `QUEUE_COMMANDS {id: selectedId, commands:[{kind}]}`.
-- `btn-goto-mode`: toggle `gotoArmed`.
+- `btn-goto-mode`: toggle `gotoArmed`. Pressing it while edit mode is on turns edit mode off and arms GOTO (the two modes are exclusive; a silent no-op is not allowed).
+- Selecting any robot (grid, list or placement) disarms GOTO.
 - `btn-step`: `POST /step`. `btn-play`: `POST /play` or `/pause`.
 - Turning edit mode on disarms GOTO; it does not deselect.
 - The selection also clears when the selected robot disappears (deleted here or elsewhere) or the floor is recreated.
@@ -381,8 +385,8 @@ Other pointer actions:
 ### 5.2 Keyboard
 
 One `keydown` listener on `document`. **Ignore the event entirely** when any of these hold: `event.defaultPrevented`;
-Ctrl, Meta or Alt pressed; a modal `dialog` is open; or the event target is a text-entry control: `input` (every type,
-including `range` and `number`), `textarea`, `select`, or `[contenteditable]`. (The interval slider uses the arrow keys
+Ctrl, Meta or Alt pressed; a modal `dialog` is open; or the event target is a text-entry control: `input` (every type except `checkbox`,
+so `range`, `number` and `text` are included; a focused checkbox must not swallow the arrow keys), `textarea`, `select`, or `[contenteditable]`. (The interval slider uses the arrow keys
 itself; this rule is what stops them from also queuing commands.)
 
 | Key | Condition | Effect |
@@ -400,6 +404,10 @@ itself; this rule is what stops them from also queuing commands.)
 
 Arrow-key commands while offline: nothing is sent; toast `OFFLINE`. Commands never move focus.
 
+A command key pressed while this client's own `PLACE_ROBOT` is in flight is dropped silently (no toast). The new robot is selected only when the placement succeeds, so a key pressed earlier has no valid target, and it must never go to the previously selected robot.
+
+A click on a grid cell never leaves focus on a text-entry control: if the interval slider or another input has focus, blur it on cell activation (cells swallow `mousedown`, so the browser will not move focus itself). Otherwise the next arrow key would move the slider instead of queuing a command.
+
 ### 5.3 GOTO on touch and keyboard
 
 Shift-click is mouse-only, so the same feature is reachable with `btn-goto-mode` (press "GOTO…", then pick the target
@@ -407,7 +415,7 @@ cell) and with the keyboard (focus a cell, Shift+Enter). All three send the iden
 
 ### 5.4 Grid keyboard navigation (P2)
 
-The grid is a single tab stop (roving `tabindex`: one cell has `0`, the others `-1`); the first Tab into it lands on the selected robot's cell, else (0,0).
+The grid is a single tab stop (roving `tabindex`: one cell has `0`, the others `-1`); the first Tab into it lands on the cell that last had focus, else the selected robot's cell, else (0,0).
 - `W A S D` always move the focused cell up / left / down / right (clamped to the floor).
 - Arrow keys move the focused cell **only when no robot is selected**. With a robot selected they queue commands (5.2).
 - Enter / Space activates, Shift+Enter is GOTO, Home / End jump to the first / last cell of the row.
@@ -458,7 +466,7 @@ Row `robot-row-{id}` (`<li>`) with `data-selected`, `data-x`, `data-y`, `data-fa
    - The front chip has a heavier border and the visually hidden prefix "Next: ". A GOTO at the front also shows the small text "heading there".
    - Empty queue: the `<ol>` has no children and a sibling `queue-empty-{id}` reads "Queue empty". (So `queue-item` counts are exact.)
    - No truncation: chips wrap; after about 5 lines the queue area scrolls.
-3. **Last result** `last-result-{id}` (`data-outcome`, `data-reason`): "Last tick: " + glyph + the sentence from 7.4 without the leading robot id (for example "✕ Blocked at (3,4): obstacle at (3,5)"). With no result yet: "Last tick: no result yet" and no `data-outcome`.
+3. **Last result** `last-result-{id}` (`data-outcome`, `data-reason`): "Last tick: " + glyph + the 7.4 sentence without the leading robot id, capitalized and without the final period (for example "✕ Blocked at (3,4): obstacle at (3,5)", "▶ Moved (2,3) → (2,4)"). With no result yet: "Last tick: no result yet" and no `data-outcome`.
 4. Buttons: `btn-clear-queue-{id}` "Clear queue" (disabled when the queue is empty) and `btn-delete-robot-{id}` "Delete" (danger style, icon plus text). `aria-label`s include the ID ("Clear queue for R2").
 
 Selected row: 3px `--color-selected` left border, `--color-surface-2` background and a visible "Selected" tag.
@@ -494,7 +502,7 @@ Tick groups are **expanded by default** when they arrive; a user's collapse is r
 ### 7.3 IDLE handling (DECISIONS 5.6)
 
 All results are stored and counted. `IDLE` result lines are **not rendered** unless `toggle-show-idle` is on (absent from the DOM, not just hidden by CSS).
-Summary counts always include idle; with the toggle off the summary says "(N idle hidden)".
+Summary counts always include idle. With the toggle off, idle is not listed as a count but appended as "(N idle hidden)" ("Tick 1 - 2 moved (1 idle hidden)"); with the toggle on it is an ordinary count ("Tick 1 - 2 moved, 1 idle").
 A tick group with no visible lines still renders its summary, not expandable, with `data-empty="true"`:
 "Tick 5 - nothing happened (3 idle hidden)", or "Tick 5 - no robots on the floor" when `results` is empty.
 
