@@ -284,6 +284,15 @@ A successful action that changes nothing (e.g. `SET_OBSTACLE` on an existing obs
 bumps the version and is stored as an action, with no history events. *Why:* "version increments
 by exactly 1 per accepted action" stays a simple invariant, and replay stays exact.
 
+### 6.1d One floor in the UI; "new floor" recreates it **[gap]**
+The brief describes one floor. The API is floor-id aware (every route takes `:id`, and the tests
+use that), but the UI works on a single floor, `main`, created at 10×8 on first start. "New floor
+W×H" is a `CREATE_FLOOR` action on that same floor, not a `POST /floors`: it replaces robots,
+obstacles, queues and the ID counter, and **keeps the history log**, which records the reset as a
+`FLOOR_CREATED` entry. *Why:* the history is the audit trail of the floor, and keeping one id
+means every open tab simply receives the reset as an ordinary update. The cost is that two floors
+can't be compared side by side; that belongs with Module C (fork), which wasn't built.
+
 ### 6.2 Play state is not persisted **[gap]**
 After a server restart every floor comes back paused. *Why:* play/pause is a session control,
 not floor state; resuming silently after a crash would move robots with nobody watching.
@@ -330,7 +339,7 @@ action, in commit (version) order. Rejected or malformed commands broadcast noth
 unknown floor acks `null` and joins no room (the protocol's ack type becomes `FloorDto | null`).
 A socket may be in several rooms; `floor:leave` for a room it is not in is a no-op.
 
-### 7.8 Play/join input details (chosen by Dev 2, accepted by the PM)
+### 7.8 Play and join input details
 - A fractional `intervalMs` is rounded to an integer, then clamped, so `FloorDto.intervalMs` is
   always a whole number.
 - A missing, empty, `{}` or non-JSON (`text/plain`) Play body means "keep the current interval".
@@ -338,7 +347,7 @@ A socket may be in several rooms; `floor:leave` for a room it is not in is a no-
 - A `floor:join` whose payload is not an object with a string `floorId` acks `null`.
 - If a scheduled tick ever throws, that floor is paused (and `floor:playback` is broadcast)
   instead of crashing the process. Not expected to happen: TICK is never rejected.
-- UI-side rulings from Phase 3 (selection, GOTO arming, key handling during an own PLACE,
+- UI-side rulings (selection, GOTO arming, key handling during an own PLACE,
   remote-change toasts, playback adoption) live in `docs/design/UI_SPEC.md` (§3.2, 3.6, 5.1, 5.2),
   updated after the Designer's review (`docs/design/UI_REVIEW.md`).
 
@@ -356,3 +365,8 @@ A socket may be in several rooms; `floor:leave` for a room it is not in is a no-
 - **`.npmrc` sets `loglevel=silent`.** `npm run scenario -- file` otherwise prints npm's
   `> script` banner to **stdout**, which would break exact-output grading. The trade-off is quieter
   `npm install` output; errors from scripts still go to stderr.
+- **Injected tick timer.** The `TickScheduler` takes a `TickTimer` (`apps/api/src/tick-timer.ts`).
+  Production uses `setInterval`; tests inject `ManualTickTimer` and call `fire()`, so real-time
+  tests never sleep and "one timer per floor" is directly assertable.
+- **Plain socket.io handlers for join/leave** instead of Nest's `@SubscribeMessage`: Nest drops a
+  `null` return value, and joining an unknown floor must ack `null` (7.7).
