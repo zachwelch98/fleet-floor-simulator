@@ -1,5 +1,7 @@
 # Fleet Floor Simulator
 
+[![CI](https://github.com/zachwelch98/fleet-floor-simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/zachwelch98/fleet-floor-simulator/actions/workflows/ci.yml)
+
 A fleet of warehouse robots sharing one grid floor. Commands wait in per-robot queues; on every
 tick all robots act at once, and a pure engine decides who gets which cell. NestJS + SQLite on the
 server, Angular in the browser, and a CLI scenario runner that calls the same engine.
@@ -140,13 +142,13 @@ reconnects.
 
 | Layer | Count | What |
 |---|---|---|
-| Engine unit | ~575 | one file per rule: walls, contests (incl. R2 vs R10), head-on, following/chains, rotations, interactions, reducer rejections, scenario parser, GOTO (tie-break order, waiting, UNREACHABLE after 3, arrival) |
+| Engine unit | 974 | one file per rule: walls, contests (incl. R2 vs R10), head-on, following/chains, rotations, interactions, reducer rejections, scenario parser, GOTO (tie-break order, waiting, UNREACHABLE after 3, arrival); `traceScenario` (382, including a sweep over every scenario file) |
 | Engine property | 17 properties | the real resolver vs. a deliberately naive fixpoint **reference resolver** on random floors; plus no shared cells, nothing off-floor or on obstacles, listing order irrelevant, determinism; 6 more for GOTO. Fixed seed (424242) |
-| Golden scenarios | 72 | every `scenarios/*.txt` through the real `npm run scenario` CLI, stdout compared byte for byte |
-| API integration | 263 (+1 todo) | every 409 reason (a `Record<RejectionReason, …>`, so a new reason fails to compile), 400s, history paging/clamping, restart persistence, **three-way consistency** (normalized rows = snapshot = replay of the action log = GET) after every step of a 55-action sequence |
-| Real-time | 46 of the above | two socket.io clients; one timer however many clients press Play; exactly one winner per contested cell; broadcasts in version order. Uses an injected manual timer, so no sleeps |
-| Web unit | 73 | store catch-up, gap handling, history dedupe, last-tick derivation, stale-conflict toasts, keyboard rules |
-| E2E (Playwright) | 44 | placing, editing, queueing with keys, Step, GOTO, every block badge and history sentence, rejection toasts, two-tab sync, refresh persistence, new-floor dialog |
+| Golden scenarios | 77 (72 files) | every `scenarios/*.txt` through the real `npm run scenario` CLI, stdout compared byte for byte |
+| API integration | 268 (+1 todo) | every 409 reason (a `Record<RejectionReason, …>`, so a new reason fails to compile), 400s, history paging/clamping, restart persistence, **three-way consistency** (normalized rows = snapshot = replay of the action log = GET) after every step of a 55-action sequence |
+| Real-time | 51 of the above | two socket.io clients; one timer however many clients press Play; exactly one winner per contested cell; broadcasts in version order; the shared scenario run reaches late joiners and clears when its publisher leaves. Uses an injected manual timer, so no sleeps |
+| Web unit | 170 | store catch-up, gap handling, history dedupe, last-tick derivation, stale-conflict toasts, keyboard rules, scenario model and script player, uploads store, shared scenario run |
+| E2E (Playwright) | 121 (+1 skipped) | placing, editing, queueing with keys, Step, GOTO, every block badge and history sentence, rejection toasts, two-tab sync, refresh persistence, new-floor dialog, scenarios and uploads, checkpoints on every screen, the key, layout at phone/tablet/desktop widths |
 
 **Keeping the tests honest:**
 - **Black-box authorship.** The tests were written from the brief and DECISIONS.md, not from the
