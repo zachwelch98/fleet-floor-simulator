@@ -1,8 +1,11 @@
 import 'reflect-metadata';
 import type { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { API_PREFIX } from '@fleet/protocol';
 import { AppModule } from './app.module.js';
+import { DEV_UI_ORIGIN } from './cors.js';
+import { realTickTimer } from './tick-timer.js';
 import type { TickTimer } from './tick-timer.js';
 
 /**
@@ -17,13 +20,11 @@ export interface AppOptions {
   /**
    * Timer behind Play (one interval per playing floor). Defaults to `realTickTimer`. Tests inject a
    * `ManualTickTimer` (apps/api/src/tick-timer.ts) and call `fire()` instead of waiting.
-   * Phase 3: Dev 2 wires this into AppModule.register and the TickScheduler.
    */
   readonly timer?: TickTimer;
 }
 
-/** The dev UI (ng serve) origin allowed by CORS. */
-export const DEV_UI_ORIGIN = 'http://localhost:4200';
+export { DEV_UI_ORIGIN };
 
 /**
  * Builds a fully configured, initialized Nest app (global '/api' prefix, routes per
@@ -32,12 +33,18 @@ export const DEV_UI_ORIGIN = 'http://localhost:4200';
  */
 export async function createApp(options: AppOptions): Promise<INestApplication> {
   const app = await NestFactory.create(
-    AppModule.register({ dbPath: options.dbPath, now: options.now ?? (() => new Date()) }),
+    AppModule.register({
+      dbPath: options.dbPath,
+      now: options.now ?? (() => new Date()),
+      timer: options.timer ?? realTickTimer,
+    }),
     { logger: ['error', 'warn'] },
   );
   // API_PREFIX is '/api'; Nest wants it without the leading slash.
   app.setGlobalPrefix(API_PREFIX.replace(/^\//, ''));
   app.enableCors({ origin: DEV_UI_ORIGIN });
+  // socket.io shares the HTTP server (namespace "/", path "/socket.io"); see FloorGateway.
+  app.useWebSocketAdapter(new IoAdapter(app));
   await app.init();
   return app;
 }
