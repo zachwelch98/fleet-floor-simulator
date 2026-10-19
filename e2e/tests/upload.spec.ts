@@ -372,7 +372,7 @@ test.describe('(c) deliberately wrong .expected', () => {
     await attachExpected(page, 'short.expected', 'R1 1,0,EAST\nR2 3,0,WEST\n');
     await page.getByTestId('btn-load-scenario').click();
     await expect(page.getByTestId('scenario-title')).toBeVisible();
-    await expect(page.getByTestId('scenario-summary')).toHaveText(/ \/ 3 passed$/);
+    await expect(page.getByTestId('scenario-summary')).toHaveText(/\/ 3 passed\s*$/);
     await expect(page.getByTestId('checkpoint-0')).toBeVisible();
     await expect(page.getByTestId('checkpoint-2')).toBeVisible();
     await expect(page.getByTestId('runner-output')).toBeVisible();
@@ -487,7 +487,12 @@ test.describe('(e) FLOOR mid-script', () => {
   test('floor_resets_world.txt plays to the end and passes', async ({ page }) => {
     await openApp(page);
     await uploadAndLoad(page, 'floors.txt', bundled('floor_resets_world', 'txt'));
-    await expect(page.getByTestId('scenario-summary')).toHaveText('0 / 3 passed');
+    // The first REPORT comes before the first TICK, so it is captured from the floor at Load (EMPTY after
+    // the second FLOOR): that checkpoint already passes and the other two are pending.
+    await expect(page.getByTestId('scenario-summary')).toHaveText('1 / 3 passed');
+    await expect(page.getByTestId('checkpoint-0')).toHaveAttribute('data-status', 'pass');
+    await expect(page.getByTestId('checkpoint-1')).toHaveAttribute('data-status', 'pending');
+    await expect(page.getByTestId('checkpoint-2')).toHaveAttribute('data-status', 'pending');
     expect(await runnerLines(page)).toEqual(linesOf(bundled('floor_resets_world', 'expected')));
     // Both FLOOR lines come before the first TICK, so the loaded floor is already the second one (4x4).
     await expect(page.getByTestId('floor-size')).toHaveAttribute('data-width', '4');
