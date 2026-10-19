@@ -61,3 +61,25 @@ describe('golden scenarios (real CLI)', () => {
     expect(run.stdout).toBe(expected);
   });
 });
+
+describe('scenario CLI paths', () => {
+  // npm always runs scripts from the repo root, so a relative path must be resolved against the
+  // directory the command was typed in (INIT_CWD), not the root.
+  it('accepts a path relative to a subdirectory it is run from', () => {
+    const run = spawnSync('npm', ['run', 'scenario', '--', 'brief_a_chain.txt'], {
+      cwd: SCENARIO_DIR,
+      encoding: 'utf8',
+    });
+    expect(run.status, `exit code (stderr: ${run.stderr})`).toBe(0);
+    expect(run.stdout).toBe(readFileSync(join(SCENARIO_DIR, 'brief_a_chain.expected'), 'utf8'));
+  });
+
+  it('accepts a path relative to the repo root', () => {
+    const run = spawnSync('npm', ['run', 'scenario', '--', 'scenarios/brief_b_headon.txt'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+    });
+    expect(run.status, `exit code (stderr: ${run.stderr})`).toBe(0);
+    expect(run.stdout).toBe(readFileSync(join(SCENARIO_DIR, 'brief_b_headon.expected'), 'utf8'));
+  });
+});
