@@ -23,6 +23,7 @@
 }
 
 .frame {
+  margin-inline: auto;
   display: grid;
   grid-template-columns: var(--axis-size) auto var(--title-size);
   grid-template-rows: var(--title-size) auto var(--axis-size);
@@ -203,6 +204,12 @@
   line-height: 1;
   color: var(--hue);
 }
+/* Under 30px a marker label collides with the crosshair: only the selected robot's is shown. */
+@container (max-width: 29.99px) {
+  .goto[data-selected='false'] .goto-id {
+    display: none;
+  }
+}
 @container (max-width: 23.99px) {
   .goto-id {
     display: none;
@@ -227,6 +234,12 @@
   font-weight: 700;
   line-height: 12px;
   pointer-events: auto;
+}
+@container (max-width: 29.99px) {
+  .badge {
+    font-size: 7px;
+    letter-spacing: -0.02em;
+  }
 }
 @container (max-width: 23.99px) {
   .badge {
