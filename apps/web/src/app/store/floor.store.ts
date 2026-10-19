@@ -475,11 +475,25 @@ export class FloorStore {
   }
 
   async step(): Promise<void> {
+    await this.stepOnce();
+  }
+
+  /**
+   * One server Step, resolving with the success body (null when refused). The scenario script
+   * player uses it to check the floor version each answer carries.
+   */
+  async stepOnce(): Promise<CommandSuccess | null> {
     const result = await this.submit(null);
     const tick = result?.history.find((e) => e.event.type === 'TICK_RESOLVED');
     if (tick && tick.event.type === 'TICK_RESOLVED') {
       this.announcement.set(announceTick(tick.event.tick, tick.event.results));
     }
+    return result;
+  }
+
+  /** Send one action through the FIFO, resolving with the success body (null when refused). */
+  sendActionOnce(action: Action): Promise<CommandSuccess | null> {
+    return this.submit(action);
   }
 
   async togglePlay(): Promise<void> {

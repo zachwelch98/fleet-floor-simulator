@@ -1,36 +1,17 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, expect, it } from 'vitest';
-import { findScenario } from '../core/scenarios';
-import { FLOOR_API, FLOOR_SOCKET, type CommandOutcome } from '../core/transport';
-import { MockApi, MockSocket, entry, floorDto, tickResult } from '../testing/mocks';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { SCENARIOS } from '../core/scenarios';
+import { FLOOR_API, FLOOR_SOCKET } from '../core/transport';
+import { MockApi, MockSocket, fakeServer, flush } from '../testing/mocks';
 import { FloorStore } from './floor.store';
 import { ScenarioStore } from './scenario.store';
 
-const E = findScenario('brief_e_queues')!;
-const BASE = { def: E, baseVersion: 5, baseTick: 0 };
-
-/** The server's TICK_RESOLVED for brief e at `tick`, ending where R1 and R2 are given. */
-function tickEntry(seq: number, tick: number, r1: [number, number, 'SOUTH'], r2: [number, number]) {
-  return entry(
-    seq,
-    {
-      type: 'TICK_RESOLVED',
-      tick,
-      results: [
-        tickResult('R1', { outcome: 'IDLE', to: { x: r1[0], y: r1[1] }, facing: r1[2] }),
-        tickResult('R2', { outcome: 'MOVED', to: { x: r2[0], y: r2[1] }, facing: 'EAST' }),
-      ],
-    },
-    tick,
-  );
-}
-
 async function setup() {
+  localStorage.clear();
   const api = new MockApi();
   const socket = new MockSocket();
-  api.getFloor.mockResolvedValue(floorDto());
-  api.getHistory.mockResolvedValue([]);
-  api.pause.mockResolvedValue(floorDto({ playing: false }));
+  const server = fakeServer(api);
+  TestBed.resetTestingModule();
   TestBed.configureTestingModule({
     providers: [
       { provide: FLOOR_API, useValue: api },
@@ -41,161 +22,391 @@ async function setup() {
   await floor.init();
   floor.connection.set('connected');
   const scenarios = TestBed.inject(ScenarioStore);
-  return { api, floor, scenarios };
+  return { api, socket, server, floor, scenarios };
 }
 
-function success(version: number): CommandOutcome {
-  return { kind: 'success', body: { ok: true, floor: floorDto({ version }), history: [] } };
+type Env = Awaited<ReturnType<typeof setup>>;
+
+async function load(env: Env, id: string): Promise<void> {
+  env.scenarios.select(id);
+  await env.scenarios.load();
 }
 
-describe('ScenarioStore checkpoints', () => {
-  it('has no run until a scenario is loaded', async () => {
-    const { scenarios } = await setup();
-    expect(scenarios.run()).toBeNull();
-  });
+/** Deliver what the socket would carry for something another tab did. */
+function broadcast(env: Env, action: Parameters<Env['server']['external']>[0]): void {
+  const body = env.server.external(action);
+  env.socket.handlers.onUpdated({ floor: body.floor, history: [...body.history] });
+}
 
-  it('goes pending, then pass as the server reaches each checkpoint tick', async () => {
-    const { floor, scenarios } = await setup();
-    scenarios.active.set(BASE);
-    expect(scenarios.run()?.checkpoints.map((c) => c.status)).toEqual(['pending', 'pending']);
+const statuses = (env: Env) => env.scenarios.run()?.checkpoints.map((c) => c.status);
+const types = (env: Env) => env.server.sent.map((a) => a.type);
 
-    floor.history.set([
-      tickEntry(6, 1, [2, 2, 'SOUTH'], [0, 1]),
-      tickEntry(7, 2, [2, 2, 'SOUTH'], [0, 1]),
-    ]);
-    expect(scenarios.run()?.checkpoints.map((c) => c.status)).toEqual(['pending', 'pending']);
-
-    floor.history.update((h) => [...h, tickEntry(8, 3, [2, 2, 'SOUTH'], [1, 1])]);
-    const first = scenarios.run()!;
-    expect(first.checkpoints.map((c) => c.status)).toEqual(['pass', 'pending']);
-    expect(first.passed).toBe(1);
-    expect(first.complete).toBe(false);
-
-    floor.history.update((h) => [...h, tickEntry(9, 13, [2, 2, 'SOUTH'], [3, 1])]);
-    const done = scenarios.run()!;
-    expect(done.checkpoints.map((c) => c.status)).toEqual(['pass', 'pass']);
-    expect(done.passed).toBe(2);
-    expect(done.complete).toBe(true);
-    expect(done.modified).toBe(false);
-  });
-
-  it('fails a checkpoint with the lines the server produced', async () => {
-    const { floor, scenarios } = await setup();
-    scenarios.active.set(BASE);
-    floor.history.set([tickEntry(6, 3, [2, 2, 'SOUTH'], [0, 2])]);
-    const cp = scenarios.run()!.checkpoints[0]!;
-    expect(cp.status).toBe('fail');
-    expect(cp.expected).toEqual(['R1 2,2,SOUTH', 'R2 1,1,EAST']);
-    expect(cp.actual).toEqual(['R1 2,2,SOUTH', 'R2 0,2,EAST']);
-    expect(scenarios.run()!.passed).toBe(0);
-  });
-
-  it('matches by tick number relative to the load, and ignores history from before it', async () => {
-    const { floor, scenarios } = await setup();
-    // The floor already stood at tick 40 when the setup finished; entry 4 is from before the load.
-    scenarios.active.set({ def: E, baseVersion: 5, baseTick: 40 });
-    floor.history.set([
-      tickEntry(4, 43, [2, 2, 'SOUTH'], [1, 1]),
-      tickEntry(6, 41, [2, 2, 'SOUTH'], [0, 1]),
-      tickEntry(7, 43, [2, 2, 'SOUTH'], [1, 1]),
-    ]);
-    expect(scenarios.run()!.checkpoints[0]!.status).toBe('pass');
-    floor.history.set([tickEntry(4, 43, [2, 2, 'SOUTH'], [1, 1])]);
-    expect(scenarios.run()!.checkpoints[0]!.status).toBe('pending');
-  });
-
-  it('marks the run modified on any non-tick change after the load, but not for the setup itself', async () => {
-    const { floor, scenarios } = await setup();
-    scenarios.active.set(BASE);
-    floor.history.set([
-      entry(5, { type: 'COMMANDS_QUEUED', id: 'R1', commands: [{ kind: 'MOVE' }] }),
-    ]);
-    expect(scenarios.run()!.modified).toBe(false);
-    floor.history.update((h) => [
-      ...h,
-      entry(6, { type: 'OBSTACLE_SET', x: 1, y: 1, present: true }),
-    ]);
-    expect(scenarios.run()!.modified).toBe(true);
-  });
-
-  it('ends the run when a floor is created after the load', async () => {
-    const { floor, scenarios } = await setup();
-    scenarios.active.set(BASE);
-    floor.history.set([entry(6, { type: 'FLOOR_CREATED', width: 3, height: 3 })]);
-    expect(scenarios.run()).toBeNull();
-  });
+afterEach(() => {
+  vi.useRealTimers();
 });
 
-describe('ScenarioStore load', () => {
-  it('sends the setup of the selected scenario and tracks from the floor held afterwards', async () => {
-    const { api, scenarios } = await setup();
-    let version = 1;
-    api.sendAction.mockImplementation(async () => success(++version));
-    scenarios.select('brief_b_headon');
-    const loading = scenarios.load();
-    expect(scenarios.loading()).toBe(true);
-    await loading;
-    expect(scenarios.loading()).toBe(false);
-    expect(api.sendAction).toHaveBeenCalledTimes(findScenario('brief_b_headon')!.setup.length);
-    expect(scenarios.active()).toMatchObject({ baseVersion: version, baseTick: 0 });
-    expect(scenarios.active()?.def.id).toBe('brief_b_headon');
+describe('load', () => {
+  it('sends the setup up to the first tick, no tick, and waits for Play or Step', async () => {
+    const env = await setup();
+    await load(env, 'brief_e_queues');
+    expect(types(env)).toEqual([
+      'CREATE_FLOOR',
+      'PLACE_ROBOT',
+      'PLACE_ROBOT',
+      'QUEUE_COMMANDS',
+      'QUEUE_COMMANDS',
+    ]);
+    expect(env.api.step).not.toHaveBeenCalled();
+    expect(env.scenarios.loading()).toBe(false);
+    expect(env.scenarios.active()?.def.id).toBe('brief_e_queues');
+    expect(statuses(env)).toEqual(['pending', 'pending']);
+    expect(env.scenarios.run()).toMatchObject({ modified: false, finished: false });
   });
 
   it('starts no run when the setup is refused, and clears the previous one', async () => {
-    const { api, scenarios } = await setup();
-    scenarios.active.set(BASE);
-    api.sendAction.mockResolvedValue({
+    const env = await setup();
+    await load(env, 'brief_a_chain');
+    expect(env.scenarios.run()).not.toBeNull();
+    env.api.sendAction.mockResolvedValue({
       kind: 'rejected',
-      body: { ok: false, reason: 'CELL_OCCUPIED', message: 'x', floor: floorDto({ version: 2 }) },
+      body: {
+        ok: false,
+        reason: 'CELL_OCCUPIED',
+        message: 'x',
+        floor: env.server.dto(),
+      },
     });
-    await scenarios.load();
-    expect(scenarios.active()).toBeNull();
-    expect(scenarios.loading()).toBe(false);
+    await load(env, 'brief_b_headon');
+    expect(env.scenarios.active()).toBeNull();
+    expect(env.scenarios.loading()).toBe(false);
+  });
+
+  it('captures a REPORT that comes before the first tick straight from the floor', async () => {
+    const env = await setup();
+    env.scenarios.select('brief_a_chain');
+    await env.scenarios.importFile(
+      new File(['PLACE R1 0,0,EAST\nREPORT\nQUEUE R1 MOVE\nTICK\nREPORT\n'], 'early.txt'),
+    );
+    await env.scenarios.load();
+    expect(statuses(env)).toEqual(['pass', 'pending']);
+    expect(env.scenarios.run()!.checkpoints[0]).toMatchObject({
+      afterTicks: 0,
+      live: ['R1 0,0,EAST'],
+    });
+    await env.scenarios.step();
+    expect(statuses(env)).toEqual(['pass', 'pass']);
+    expect(env.scenarios.run()!.finished).toBe(true);
   });
 
   it('reload loads the active scenario again even if the picker moved on', async () => {
-    const { api, scenarios } = await setup();
-    let version = 1;
-    api.sendAction.mockImplementation(async () => success(++version));
-    scenarios.select('brief_a_chain');
-    await scenarios.load();
-    scenarios.select('brief_e_queues');
-    await scenarios.reload();
-    expect(scenarios.active()?.def.id).toBe('brief_a_chain');
-    expect(scenarios.selectedId()).toBe('brief_a_chain');
+    const env = await setup();
+    await load(env, 'brief_a_chain');
+    env.scenarios.select('brief_e_queues');
+    await env.scenarios.reload();
+    expect(env.scenarios.active()?.def.id).toBe('brief_a_chain');
+    expect(env.scenarios.selectedId()).toBe('brief_a_chain');
+  });
+
+  it('refuses a live run over 1000 ticks: floor untouched, checks shown as not run', async () => {
+    const env = await setup();
+    await env.scenarios.importFile(
+      new File(['FLOOR 3,3\nPLACE R1 0,0,EAST\nTICK 1001\nREPORT\n'], 'long.txt'),
+    );
+    await env.scenarios.load();
+    expect(env.server.sent).toEqual([]);
+    const run = env.scenarios.run()!;
+    expect(run.refused).toBe(true);
+    expect(run.checkpoints.map((c) => c.status)).toEqual(['na']);
+    expect(run.checkpoints[0]?.runner).toEqual(['R1 0,0,EAST']);
+    // Play and Step are the server's: nothing to drive.
+    await env.scenarios.step();
+    expect(env.api.step).toHaveBeenCalledTimes(1);
+    await env.scenarios.play();
+    expect(env.api.play).toHaveBeenCalledTimes(1);
   });
 });
 
-describe('ScenarioStore auto-pause', () => {
-  it('pauses once when the last checkpoint resolves while playing, and leaves a later Play alone', async () => {
-    const { api, floor, scenarios } = await setup();
-    scenarios.active.set(BASE);
-    floor.floor.set(floorDto({ playing: true, version: 8 }));
-    floor.history.set([tickEntry(6, 3, [2, 2, 'SOUTH'], [1, 1])]);
-    TestBed.tick();
-    expect(api.pause).not.toHaveBeenCalled();
-
-    floor.history.update((h) => [...h, tickEntry(7, 13, [2, 2, 'SOUTH'], [3, 1])]);
-    TestBed.tick();
-    await Promise.resolve();
-    expect(api.pause).toHaveBeenCalledTimes(1);
-
-    // Another tick lands before the pause did, then the user presses Play again: no second pause.
-    floor.history.update((h) => [...h, tickEntry(8, 14, [2, 2, 'SOUTH'], [3, 1])]);
-    floor.floor.set(floorDto({ playing: false, version: 9 }));
-    floor.floor.set(floorDto({ playing: true, version: 10 }));
-    TestBed.tick();
-    expect(api.pause).toHaveBeenCalledTimes(1);
+describe('Step', () => {
+  it('advances through one tick and reads the REPORT after it', async () => {
+    const env = await setup();
+    await load(env, 'brief_a_chain');
+    await env.scenarios.step();
+    expect(env.api.step).toHaveBeenCalledTimes(1);
+    expect(statuses(env)).toEqual(['pass']);
+    expect(env.scenarios.run()).toMatchObject({ passed: 1, complete: true, finished: true });
+    expect(env.scenarios.stepping()).toBe(false);
   });
 
-  it('does not pause while paused or before the run is complete', async () => {
-    const { api, floor, scenarios } = await setup();
-    scenarios.active.set(BASE);
-    floor.history.set([
-      tickEntry(6, 3, [2, 2, 'SOUTH'], [1, 1]),
-      tickEntry(7, 13, [2, 2, 'SOUTH'], [3, 1]),
+  it('sends commands that come after a tick right before the next one, in file order', async () => {
+    const env = await setup();
+    await load(env, 'goto_two_robots_corridor');
+    const afterLoad = env.server.sent.length;
+    await env.scenarios.step(); // tick 1, REPORT
+    expect(statuses(env)).toEqual(['pass', 'pending', 'pending']);
+    for (let i = 0; i < 3; i++) await env.scenarios.step(); // ticks 2-4, REPORT
+    expect(statuses(env)).toEqual(['pass', 'pass', 'pending']);
+    expect(types(env).slice(afterLoad)).toEqual(['TICK', 'TICK', 'TICK', 'TICK']);
+
+    await env.scenarios.step(); // the two QUEUEs, then tick 5, REPORT
+    expect(types(env).slice(afterLoad)).toEqual([
+      'TICK',
+      'TICK',
+      'TICK',
+      'TICK',
+      'QUEUE_COMMANDS',
+      'QUEUE_COMMANDS',
+      'TICK',
     ]);
+    expect(statuses(env)).toEqual(['pass', 'pass', 'pass']);
+    expect(env.scenarios.run()!.finished).toBe(true);
+  });
+
+  it('flushes actions that come after the last tick, so the run can finish', async () => {
+    const env = await setup();
+    await env.scenarios.importFile(
+      new File(['PLACE R1 0,0,EAST\nTICK\nQUEUE R1 MOVE\nREPORT\n'], 'tail.txt'),
+    );
+    await env.scenarios.load();
+    await env.scenarios.step();
+    expect(types(env).slice(-2)).toEqual(['TICK', 'QUEUE_COMMANDS']);
+    expect(env.scenarios.run()).toMatchObject({ finished: true, passed: 1 });
+  });
+
+  it('is the server Step when no run is active, and again after the run has finished', async () => {
+    const env = await setup();
+    await env.scenarios.step();
+    expect(env.api.step).toHaveBeenCalledTimes(1);
+    await load(env, 'brief_a_chain');
+    await env.scenarios.step();
+    expect(env.api.step).toHaveBeenCalledTimes(2); // the scenario's own tick
+    await env.scenarios.step();
+    expect(env.api.step).toHaveBeenCalledTimes(3); // finished: plain Step
+    expect(env.scenarios.run()!.modified).toBe(false);
+  });
+});
+
+describe('Play', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  it('walks the script one Step per interval and never uses the server Play', async () => {
+    const env = await setup();
+    await load(env, 'brief_e_queues'); // 13 ticks
+    const playing = env.scenarios.play();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(env.scenarios.stepping()).toBe(true);
+    expect(env.api.step).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(499);
+    expect(env.api.step).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(env.api.step).toHaveBeenCalledTimes(2);
+    await vi.advanceTimersByTimeAsync(20_000);
+    await playing;
+    expect(env.api.step).toHaveBeenCalledTimes(13);
+    expect(env.api.play).not.toHaveBeenCalled();
+    expect(env.scenarios.stepping()).toBe(false);
+    expect(statuses(env)).toEqual(['pass', 'pass']);
+    expect(env.scenarios.run()).toMatchObject({ passed: 2, finished: true, modified: false });
+  });
+
+  it('follows the interval slider', async () => {
+    const env = await setup();
+    await load(env, 'brief_e_queues');
+    env.floor.intervalMs.set(100);
+    void env.scenarios.play();
+    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(100 * 4);
+    expect(env.api.step).toHaveBeenCalledTimes(5);
+  });
+
+  it('Pause stops between steps and Play resumes where it left off', async () => {
+    const env = await setup();
+    await load(env, 'brief_e_queues');
+    const playing = env.scenarios.play();
+    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(500 * 2);
+    expect(env.api.step).toHaveBeenCalledTimes(3);
+    await env.scenarios.pause();
+    await playing;
+    expect(env.scenarios.stepping()).toBe(false);
+    expect(env.api.pause).not.toHaveBeenCalled(); // the server was never playing
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(env.api.step).toHaveBeenCalledTimes(3);
+    expect(statuses(env)).toEqual(['pass', 'pending']); // after tick 3
+
+    // Step works while paused; then Play continues from tick 5.
+    await env.scenarios.step();
+    expect(env.api.step).toHaveBeenCalledTimes(4);
+    const resumed = env.scenarios.play();
+    await vi.advanceTimersByTimeAsync(20_000);
+    await resumed;
+    expect(env.api.step).toHaveBeenCalledTimes(13);
+    expect(statuses(env)).toEqual(['pass', 'pass']);
+  });
+
+  it('sends commands between ticks during Play too', async () => {
+    const env = await setup();
+    await load(env, 'goto_two_robots_corridor');
+    const playing = env.scenarios.play();
+    await vi.advanceTimersByTimeAsync(10_000);
+    await playing;
+    expect(types(env).slice(-3)).toEqual(['QUEUE_COMMANDS', 'QUEUE_COMMANDS', 'TICK']);
+    expect(statuses(env)).toEqual(['pass', 'pass', 'pass']);
+  });
+
+  it('is the server Play when no run is active', async () => {
+    const env = await setup();
+    await env.scenarios.play();
+    expect(env.api.play).toHaveBeenCalledTimes(1);
+    expect(env.scenarios.stepping()).toBe(false);
+    await env.scenarios.pause();
+    expect(env.api.pause).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('interference', () => {
+  it('an answer whose version skips one (another tab acted in between) stops the run as modified', async () => {
+    const env = await setup();
+    await load(env, 'brief_e_queues');
+    await env.scenarios.step();
+    expect(env.scenarios.run()!.modified).toBe(false);
+    env.server.external({ type: 'TOGGLE_OBSTACLE', x: 3, y: 0 }); // the store is not told
+    await env.scenarios.step();
+    expect(env.scenarios.run()!.modified).toBe(true);
+    // Stopped: no further script steps; Step is now the plain server Step.
+    const steps = env.api.step.mock.calls.length;
+    await env.scenarios.step();
+    expect(env.api.step).toHaveBeenCalledTimes(steps + 1);
+    expect(env.scenarios.run()!.checkpoints.some((c) => c.status === 'pass')).toBe(false);
+  });
+
+  it('flags a change that arrives over the socket at once, and stops a running Play', async () => {
+    vi.useFakeTimers();
+    const env = await setup();
+    await load(env, 'brief_e_queues');
+    const playing = env.scenarios.play();
+    await vi.advanceTimersByTimeAsync(600);
+    expect(env.scenarios.stepping()).toBe(true);
+    broadcast(env, { type: 'TOGGLE_OBSTACLE', x: 3, y: 0 });
     TestBed.tick();
-    expect(api.pause).not.toHaveBeenCalled();
+    expect(env.scenarios.run()!.modified).toBe(true);
+    await vi.advanceTimersByTimeAsync(10_000);
+    await playing;
+    expect(env.scenarios.stepping()).toBe(false);
+    expect(env.api.step.mock.calls.length).toBeLessThan(5);
+  });
+
+  it('flags server Play started from another tab', async () => {
+    const env = await setup();
+    await load(env, 'brief_e_queues');
+    env.socket.handlers.onPlayback({ floorId: 'main', playing: true, intervalMs: 500 });
+    TestBed.tick();
+    expect(env.scenarios.run()!.modified).toBe(true);
+  });
+
+  it('does not flag a finished run for later edits, but a new floor ends it', async () => {
+    const env = await setup();
+    await load(env, 'brief_a_chain');
+    await env.scenarios.step();
+    broadcast(env, { type: 'TOGGLE_OBSTACLE', x: 4, y: 4 });
+    TestBed.tick();
+    expect(env.scenarios.run()).toMatchObject({ modified: false, passed: 1 });
+    broadcast(env, { type: 'CREATE_FLOOR', width: 6, height: 4 });
+    TestBed.tick();
+    expect(env.scenarios.run()).toBeNull();
+  });
+
+  it('stops as failed when the server refuses a script command', async () => {
+    const env = await setup();
+    await load(env, 'brief_a_chain');
+    env.api.step.mockResolvedValue({
+      kind: 'rejected',
+      body: { ok: false, reason: 'CELL_OCCUPIED', message: 'x', floor: env.server.dto() },
+    });
+    await env.scenarios.step();
+    expect(env.scenarios.run()).toMatchObject({ failed: true, modified: false });
+  });
+
+  it("the run is not disturbed by this tab's own steps", async () => {
+    const env = await setup();
+    await load(env, 'goto_two_robots_corridor');
+    for (let i = 0; i < 5; i++) await env.scenarios.step();
+    TestBed.tick();
+    await flush();
+    expect(env.scenarios.run()).toMatchObject({ modified: false, failed: false, passed: 3 });
+  });
+});
+
+describe('checks', () => {
+  it('marks a failing live checkpoint and keeps the runner apart when an .expected differs', async () => {
+    const env = await setup();
+    await env.scenarios.importFile(new File(['PLACE R1 0,0,EAST\nTICK\nREPORT\n'], 'x.txt'));
+    await env.scenarios.attachExpectedFile(new File(['R1 7,7,EAST\n'], 'x.expected'));
+    await env.scenarios.load();
+    await env.scenarios.step();
+    const cp = env.scenarios.run()!.checkpoints[0]!;
+    expect(cp).toMatchObject({
+      status: 'fail',
+      expected: ['R1 7,7,EAST'],
+      runner: ['R1 0,0,EAST'],
+      live: ['R1 0,0,EAST'],
+      runnerDiffers: true,
+    });
+    expect(env.scenarios.run()!.passed).toBe(0);
+  });
+
+  it('with no .expected the runner output is the expected, and live must match it', async () => {
+    const env = await setup();
+    await env.scenarios.importFile(new File(['PLACE R1 0,0,EAST\nTICK\nREPORT\n'], 'x.txt'));
+    await env.scenarios.load();
+    await env.scenarios.step();
+    expect(env.scenarios.run()!.checkpoints[0]).toMatchObject({
+      status: 'pass',
+      runnerDiffers: false,
+    });
+  });
+
+  it('a script with no REPORT has no checkpoints and is complete once played', async () => {
+    const env = await setup();
+    await env.scenarios.importFile(new File(['PLACE R1 0,0,EAST\nTICK\n'], 'none.txt'));
+    await env.scenarios.load();
+    expect(env.scenarios.run()!.checkpoints).toEqual([]);
+    await env.scenarios.step();
+    expect(env.scenarios.run()).toMatchObject({ finished: true, complete: true, passed: 0 });
+  });
+});
+
+describe('uploads through the store', () => {
+  it('imports a file under any name, selects it, and lists it after the bundled ones', async () => {
+    const env = await setup();
+    await env.scenarios.importFile(new File(['TICK\nREPORT\n'], 'my floor test.txt'));
+    expect(env.scenarios.selectedId()).toBe('upload:my-floor-test-txt-1');
+    expect(env.scenarios.selected()?.title).toBe('my floor test.txt');
+    expect(env.scenarios.scenarios().length).toBe(SCENARIOS.length + 1);
+    expect(env.scenarios.scenarios().at(-1)?.group).toBe('uploaded');
+  });
+
+  it('shows an upload error and leaves the picker alone for an oversized file', async () => {
+    const env = await setup();
+    const before = env.scenarios.selectedId();
+    await env.scenarios.importFile(new File(['#'.repeat(70_000)], 'big.txt'));
+    expect(env.scenarios.uploadError()).toMatch(/64 KB/);
+    expect(env.scenarios.selectedId()).toBe(before);
+    env.scenarios.clearUploadError();
+    expect(env.scenarios.uploadError()).toBeNull();
+  });
+
+  it('Remove drops the selected upload and ends its run; bundled scenarios cannot be removed', async () => {
+    const env = await setup();
+    env.scenarios.removeSelected(); // a bundled scenario: nothing happens
+    expect(env.scenarios.scenarios()).toHaveLength(SCENARIOS.length);
+    await env.scenarios.importFile(new File(['TICK\nREPORT\n'], 'a.txt'));
+    await env.scenarios.load();
+    expect(env.scenarios.run()).not.toBeNull();
+    env.scenarios.removeSelected();
+    expect(env.scenarios.scenarios()).toHaveLength(SCENARIOS.length);
+    expect(env.scenarios.run()).toBeNull();
+    expect(env.scenarios.selectedId()).toBe(SCENARIOS[0]?.id);
   });
 });
