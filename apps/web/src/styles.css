@@ -11,6 +11,11 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Touch feedback comes from our own pressed states, not the browser's blue flash. */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 h1,
 h2,
 h3 {
@@ -132,6 +137,9 @@ h3 {
 }
 
 .panel {
+  /* Containing block for absolutely positioned children (.visually-hidden) so a scrolling panel
+     clips them instead of letting them stretch the document. */
+  position: relative;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-2);

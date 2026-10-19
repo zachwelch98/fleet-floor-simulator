@@ -20,7 +20,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: 32px;
+  min-height: 28px;
   font-size: var(--text-sm);
 }
 .idle input {
@@ -37,6 +37,7 @@
   margin: 0;
 }
 .log {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -95,8 +96,40 @@ details[open] > summary > span::before {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
 }
+summary time {
+  font-weight: 400;
+}
 time {
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+/* Phone touch targets are at least 44px (UI_SPEC 8). */
+@media (max-width: 899px) {
+  summary {
+    min-height: 44px;
+    align-items: center;
+  }
+  .idle {
+    min-height: 44px;
+  }
+  .idle input {
+    width: 24px;
+    height: 24px;
+  }
+}
+@media (min-width: 900px) {
+  /* Desktop: tighter header so the log keeps room (UI_SPEC 1.1). */
+  .head {
+    gap: var(--space-1) var(--space-4);
+  }
+  .bulk {
+    gap: var(--space-1);
+  }
+  .bulk .btn-small {
+    min-height: 26px;
+    padding: 0 var(--space-2);
+    font-size: var(--text-xs);
+  }
 }

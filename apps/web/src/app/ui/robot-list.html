@@ -92,10 +92,11 @@
           class="btn btn-small btn-danger del"
           [attr.data-testid]="'btn-delete-robot-' + row.robot.id"
           [attr.aria-label]="'Delete ' + row.robot.id"
+          [attr.title]="'Delete ' + row.robot.id"
           [disabled]="disabled()"
           (click)="onDelete(row.robot.id)"
         >
-          Delete
+          <span class="del-text">Delete</span>
         </button>
       </div>
     </li>
