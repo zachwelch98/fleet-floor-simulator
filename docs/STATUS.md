@@ -8,39 +8,18 @@ phase gate. Commit it along with the work it describes.
 
 ---
 
-## Current position (2026-10-18)
+## Current position (2026-10-19)
 
-- **State:** **Phase 4 done except the push.** Phase 3 gate approved. CI workflow, README, DECISIONS
-  and AI_USAGE passes committed; prep pack written (not committed).
-- **Blocked on the user:** (1) git identity / author email before the public push; (2) reword the
-  AI_USAGE entries marked "drafted by Claude"; (3) confirm the push (new public GitHub repo).
-  After the push: watch the first CI run and add the badge to the README.
-- **Upload scenarios (2026-10-19, branch `worktree-agent-a2962cd797ec8624b`, not merged):** engine
-  `traceScenario`; web scenario model on the trace (any file builds); `UploadsStore` (localStorage);
-  client-driven script player in `ScenarioStore` (Play/Pause/Step walk the script, interference stops
-  the run as "modified"); upload controls, runner output and ignored lines in the UI. DECISIONS 5.8.
-  Pending: PM merge with the Tester's `e2e/tests/upload.spec.ts` and engine trace tests, then verify.
-  Two existing e2e files were touched: `scenarios.spec.ts` (a Step in another tab now flags the run
-  instead of passing it) and `layout.spec.ts` (the spill check ignores zero-size, non-rendered boxes).
-- **Grid key (2026-10-19, branch `worktree-agent-a4be14829dce07542`, not merged):** the text legend is
-  now `ui/grid-legend.ts`, a collapsible grouped key under the status line that highlights the badges
-  on the floor (`LEGEND_BADGES` in `core/copy.ts` is the single source; `.pill` is shared with the grid
-  badges). `--grid-chrome-y` and the status-line min-heights recomputed. `e2e/tests/legend.spec.ts`.
-  DECISIONS 5.9. Pending: PM review of screenshots and merge.
-- **Key column (2026-10-19, branch `worktree-agent-adabd0bff8dd17eac`, not merged):** the key moved
-  from under the grid to its own left column from 1200px (key | grid + checkpoints | sidebar);
-  under the checkpoints at 900-1199px and on a phone. One legend instance (`.main-col` wrapper,
-  `display: contents` from 1200px), `activeBadges` is now a `FloorStore` computed, collapsed key is a
-  4.5rem rail with stacked pills (container query), key shown on an empty floor. `--grid-chrome-x`
-  reserves the key column. No existing test changed; new specs in `layout.spec.ts` and
-  `legend.spec.ts` (verify green: web 167, e2e 119 + 1 skipped). DECISIONS 5.9 addendum. Pending: PM review of screenshots and merge.
-- **Shared checkpoints (2026-10-19, on `main`, committed, verify green, not pushed):** the scenario run shows on every
-  screen. **Protocol contract change (PM):** `SocketEvents.ScenarioPublish` / `SocketEvents.Scenario`,
-  `SharedScenarioRun`, `ScenarioRunPayload`, `MAX_SHARED_SCENARIO_CHARS`. Gateway relays and caches
-  the run per floor (cleared when the publisher disconnects); `FloorStore.remoteScenario` /
-  `publishScenario`; `ScenarioStore.run` falls back to the shared run (`RunView.remote`). New
-  `apps/api/test/api-scenario-relay.test.ts`, store specs, two e2e cases in `scenarios.spec.ts` (the
-  multi-tab case now expects the panel in both tabs). DECISIONS 5.10.
+- **State:** **Ready to submit.** Pushed to https://github.com/zachwelch98/fleet-floor-simulator
+  (public). The first CI run on GitHub was green (3m36s); the badge is in the README.
+- **Author rewrite before the push:** every commit was rewritten to
+  `Zach Welch <zachwelch.work@gmail.com>` (messages, dates and trees unchanged; hashes changed). The
+  pre-rewrite history is kept locally only, on branch `backup/pre-identity-rewrite` (not pushed).
+  The repo-local git identity is set to that address.
+- **Merged since the Phase 4 note:** upload scenarios (DECISIONS 5.8), the grid key and key column
+  (5.9), shared checkpoints with the protocol change `scenario:publish` / `floor:scenario` (5.10).
+- **Last full verify (2026-10-19):** engine 1068, API 268 + 1 todo, web 170, E2E 121 + 1 skipped.
+- **AI_USAGE:** the "drafted by Claude / to be reviewed" labels were removed at the user's request.
 - **Test-infra note:** supertest opens one socket per request. Thousands of requests in quick
   succession can exhaust ephemeral ports (EADDRNOTAVAIL). Bulk setup should use
   `stepManyPooled` (keep-alive fetch) in `apps/api/test/support.ts`.
@@ -51,18 +30,14 @@ phase gate. Commit it along with the work it describes.
 cd /Users/zachwelch/Desktop/rohirrim
 git status && git log --oneline | head -5        # expect a clean tree on main
 npm install --loglevel=error                      # .npmrc silences npm; pass a loglevel to see errors
-npm run verify:fast                               # expect 677 engine tests green
-npm test -w @fleet/api                            # expect 31 passed, 1 skipped
+npm run verify:fast                               # expect 1068 engine tests green
+npm test -w @fleet/api                            # expect 268 passed, 1 todo
 python3 ~/.claude/skills/code-context-map/scripts/scan_project.py   # rebuild the (gitignored) context map
 git worktree list                                 # expect only the main checkout
 ```
 
-**Git identity (machine issue, not a repo issue):** `user.email` isn't configured globally.
-Git used to auto-detect `zachwelch@MacBook-Air.local` from the hostname, but the hostname
-changed mid-session to `Mac.(none)` and commits started failing. The last commits were made with
-`GIT_AUTHOR_*`/`GIT_COMMITTER_*` env vars set to `Zach <zachwelch@MacBook-Air.local>` to match
-the rest of the history. **Ask the user** to set an identity (and decide whether to rewrite the
-author email before the public push). Don't set it on their behalf.
+**Git identity:** resolved 2026-10-19. The repo-local `user.name`/`user.email` is
+`Zach Welch <zachwelch.work@gmail.com>`, and all history was rewritten to it before the push.
 
 ## Phase 2 Tester brief (done; kept for reference)
 
@@ -141,9 +116,9 @@ The Tester was briefed with this list. Shared helpers already exist in
 
 ### Phase 4: finish
 - [x] CI workflow `.github/workflows/ci.yml` (Node 22, `npm ci`, Chromium, `npm run verify`, report artifact on failure). Not yet run on GitHub: the local Docker dry-run failed to start (daemon off); lockfile checked for Linux native packages + `npm ci --dry-run` OK
-- [x] README rewritten; DECISIONS final pass (6.1d single floor + kept history, §8 timer/socket notes); AI_USAGE Phase 2–3 entries **drafted by Claude, marked for the user to review/reword**
+- [x] README rewritten; DECISIONS final pass (6.1d single floor + kept history, §8 timer/socket notes); AI_USAGE Phase 2–3 entries (draft labels removed 2026-10-19)
 - [x] Interview prep pack in `interview-prep/` (excluded via `.git/info/exclude`): PREP.md (walkthrough, Q&A, 8 live-change drills, debugging method, trade-offs) + `plant-bug.sh` (random planted bug in /tmp/fleet-drill, `--reveal`)
-- [ ] Push to a new public GitHub repo (**only after the user confirms**, and after the git identity question above)
+- [x] Pushed to https://github.com/zachwelch98/fleet-floor-simulator (2026-10-19); first CI run green
 
 ## Agents
 
