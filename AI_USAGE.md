@@ -56,4 +56,35 @@ and why.
   brief makes a GOTO robot give up behind another robot in a one-wide corridor (DECISIONS 3.9).
   It was kept, because it is literal and can't deadlock, and listed as future work.
 
+### Phase 2 (API tests) and Phase 3: real time and UI (drafted by Claude as PM; to be reviewed)
+- **A green mutation run that wasn't.** To check the 158 new API tests, ten bugs were injected into
+  the API one at a time. The first five were caught normally. The next five each "failed 154
+  tests", which looked like a strong result. But the identical count across unrelated bugs was
+  suspicious, and the unmodified code then failed too. The suite opens one TCP connection per
+  request, about 3,800 per run, and back-to-back runs had exhausted the machine's ports. After
+  fixing the test setup (one keep-alive connection for the 2,100-request bulk step), the rerun
+  caught all ten with plausible counts (1 to 50 failures each).
+- **Blind tests, then triage against the spec, not the code.** The real-time tests (46) were
+  written without the server code and passed against it on the first merge. The 44 browser tests
+  were written without the UI. 41 passed first time. The 3 failures were all in the tests: two
+  pressed a key before the robot they meant to command had been placed, and one selector matched
+  two history lines. The UI was left alone in all three cases, because the spec says a robot is
+  selected only when its placement succeeds.
+- **All tests green, still broken.** With every test passing, the design review found that after
+  touching the interval slider, the arrow keys kept moving the slider instead of the selected
+  robot. The UI agent had stopped grid clicks from taking focus, on purpose, which left focus on
+  the slider. It also found a desktop page stretched to 3,300 px by off-screen accessibility text.
+  Both are fixed, and the first now has a test.
+- **Rejected: a fix that broke an accessibility rule.** While tidying the phone header, the UI
+  agent reduced the "Connected" badge to a green dot. The spec's ground rule is "never color
+  alone", so that part was reverted. The rest of the change was kept.
+- **A mistake by the PM, caught by the build.** While fixing the port issue, Claude added a test
+  helper named `stepMany` without checking the context map. A helper with that name already
+  existed, and the duplicate export failed to compile. It was renamed. This is exactly the error
+  the map exists to prevent; it only helps if it's actually consulted.
+- **Accepted, non-idiomatic code.** The contract says joining an unknown floor acks `null`. Nest's
+  usual `@SubscribeMessage` handler silently drops a `null` reply, which both the server agent and
+  the test agent discovered independently. The plain socket.io handler that replaced it is less
+  idiomatic but correct, and the reason is written in a comment and in DECISIONS 8.
+
 <!-- Entries added per phase: what was asked, accepted, rejected/rewritten, and why. -->
