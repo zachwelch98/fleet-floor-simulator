@@ -380,3 +380,229 @@ for (const vp of VIEWPORTS) {
     });
   });
 }
+
+/**
+ * The key's column (DECISIONS 5.9): left of the grid from 1200px, under the checkpoints from 900px,
+ * and after the checkpoints on a phone. The checkpoints always sit directly under the grid.
+ */
+interface Rect {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+  width: number;
+  height: number;
+}
+
+async function rect(page: Page, selector: string): Promise<Rect> {
+  const box = await page.locator(selector).first().boundingBox();
+  expect(box, `${selector} is on the page`).not.toBeNull();
+  const b = box!;
+  return {
+    left: b.x,
+    right: b.x + b.width,
+    top: b.y,
+    bottom: b.y + b.height,
+    width: b.width,
+    height: b.height,
+  };
+}
+
+const overlaps = (a: Rect, b: Rect): boolean =>
+  Math.min(a.right, b.right) - Math.max(a.left, b.left) > EPS &&
+  Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > EPS;
+
+/** Load brief c (a floor with robots and a checkpoint panel) and wait for the checkpoints to show. */
+async function loadBriefC(page: Page): Promise<void> {
+  await openApp(page);
+  await loadScenario(page, 'brief_c_contest_behind');
+  await expect(page.getByTestId('scenario-results')).toBeVisible();
+}
+
+test.describe('key column at 1440x900', () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  test('key | grid column | sidebar, left to right, and no two overlap', async ({ page }) => {
+    await loadBriefC(page);
+    const key = await rect(page, '.key-col');
+    const grid = await rect(page, '.grid-col');
+    const side = await rect(page, '.sidebar');
+    expect(key.right, 'key column is left of the grid column').toBeLessThanOrEqual(grid.left + EPS);
+    expect(grid.right, 'grid column is left of the sidebar').toBeLessThanOrEqual(side.left + EPS);
+    expect(overlaps(key, grid)).toBe(false);
+    expect(overlaps(grid, side)).toBe(false);
+    expect(overlaps(key, side)).toBe(false);
+    // The key itself is inside its column, and the key column is the width the token says (15rem).
+    const legend = await rect(page, '[data-testid="grid-legend"]');
+    expect(legend.left).toBeGreaterThanOrEqual(key.left - EPS);
+    expect(legend.right).toBeLessThanOrEqual(key.right + EPS);
+    expect(key.width).toBeCloseTo(240, 0);
+    // Nothing makes the page scroll sideways.
+    expect((await measure(page)).docOverflowX).toBeLessThanOrEqual(1);
+  });
+
+  test('the checkpoints sit directly under the grid, with the key not between them', async ({
+    page,
+  }) => {
+    await loadBriefC(page);
+    const grid = await rect(page, 'app-floor-grid .frame');
+    const status = await rect(page, 'app-floor-grid .status-line');
+    const results = await rect(page, '[data-testid="scenario-results"]');
+    const legend = await rect(page, '[data-testid="grid-legend"]');
+    expect(status.top, 'status line is under the grid').toBeGreaterThanOrEqual(grid.bottom - EPS);
+    expect(results.top, 'checkpoints are under the status line').toBeGreaterThanOrEqual(
+      status.bottom - EPS,
+    );
+    expect(results.top - status.bottom, 'and start right under it').toBeLessThan(24);
+    // The key is in the column beside the grid, not in the band between the grid and the checkpoints.
+    expect(legend.right).toBeLessThanOrEqual(grid.left + EPS);
+    expect(legend.right).toBeLessThanOrEqual(results.left + EPS);
+  });
+
+  test('collapsing the key narrows its column to a rail and the grid column gets the width', async ({
+    page,
+  }) => {
+    await loadBriefC(page);
+    const before = {
+      key: await rect(page, '.key-col'),
+      grid: await rect(page, '.grid-col'),
+      side: await rect(page, '.sidebar'),
+    };
+    await page.getByTestId('legend-summary').click();
+    await expect(page.getByTestId('grid-legend')).not.toHaveAttribute('open', '');
+    const after = {
+      key: await rect(page, '.key-col'),
+      grid: await rect(page, '.grid-col'),
+      side: await rect(page, '.sidebar'),
+    };
+    expect(after.key.width, 'rail is 4.5rem').toBeCloseTo(72, 0);
+    expect(after.grid.width, 'grid column is wider').toBeGreaterThan(before.grid.width + 150);
+    expect(after.grid.left, 'grid column starts closer to the left edge').toBeLessThan(
+      before.grid.left - 150,
+    );
+    // The sidebar does not move.
+    expect(after.side.left).toBeCloseTo(before.side.left, 0);
+    expect(after.side.width).toBeCloseTo(before.side.width, 0);
+    expect(overlaps(after.key, after.grid)).toBe(false);
+    // Expanding again restores the layout.
+    await page.getByTestId('legend-summary').click();
+    await expect(page.getByTestId('grid-legend')).toHaveAttribute('open', '');
+    expect((await rect(page, '.grid-col')).width).toBeCloseTo(before.grid.width, 0);
+  });
+
+  test('the key shows on an empty floor too, and stays put when a robot is placed', async ({
+    page,
+  }) => {
+    await openApp(page);
+    await expect(page.getByTestId('grid-hint')).toBeVisible();
+    await expect(page.getByTestId('grid-legend')).toBeVisible();
+    const empty = await rect(page, '.key-col');
+    const grid = await rect(page, '.grid-col');
+    await page.getByTestId('cell-1-1').click();
+    await expect(page.getByTestId('robot-R1')).toBeVisible();
+    await expect(page.getByTestId('grid-legend')).toBeVisible();
+    const placed = await rect(page, '.key-col');
+    expect(placed.left).toBeCloseTo(empty.left, 0);
+    expect(placed.width).toBeCloseTo(empty.width, 0);
+    expect((await rect(page, '.grid-col')).width).toBeCloseTo(grid.width, 0);
+  });
+});
+
+test.describe('key column at 1024x768', () => {
+  test.use({ viewport: { width: 1024, height: 768 } });
+
+  test('two columns: the key is in the grid column, under the checkpoints, beside the sidebar', async ({
+    page,
+  }) => {
+    await loadBriefC(page);
+    const grid = await rect(page, 'app-floor-grid .frame');
+    const results = await rect(page, '[data-testid="scenario-results"]');
+    const legend = await rect(page, '[data-testid="grid-legend"]');
+    const side = await rect(page, '.sidebar');
+    const main = await rect(page, '.main-col');
+    expect(results.top, 'checkpoints under the grid').toBeGreaterThanOrEqual(grid.bottom - EPS);
+    expect(legend.top, 'key under the checkpoints').toBeGreaterThanOrEqual(results.bottom - EPS);
+    expect(legend.left).toBeGreaterThanOrEqual(main.left - EPS);
+    expect(legend.right).toBeLessThanOrEqual(main.right + EPS);
+    expect(legend.right, 'key does not run under the sidebar').toBeLessThanOrEqual(side.left + EPS);
+    expect(main.right).toBeLessThanOrEqual(side.left + EPS);
+    expect((await measure(page)).docOverflowX).toBeLessThanOrEqual(1);
+  });
+
+  test('the key is on an empty floor too, below the status line', async ({ page }) => {
+    await openApp(page);
+    await expect(page.getByTestId('grid-hint')).toBeVisible();
+    const legend = await rect(page, '[data-testid="grid-legend"]');
+    const status = await rect(page, 'app-floor-grid .status-line');
+    expect(legend.top).toBeGreaterThanOrEqual(status.bottom - EPS);
+  });
+});
+
+test.describe('key column at 390x844', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('stacked order: grid, checkpoints, key, sidebar', async ({ page }) => {
+    await loadBriefC(page);
+    const order = [
+      ['grid', await rect(page, 'app-floor-grid .frame')],
+      ['checkpoints', await rect(page, '[data-testid="scenario-results"]')],
+      ['key', await rect(page, '[data-testid="grid-legend"]')],
+      ['sidebar', await rect(page, '.sidebar')],
+    ] as const;
+    for (let i = 1; i < order.length; i++) {
+      const [prevName, prev] = order[i - 1]!;
+      const [name, cur] = order[i]!;
+      expect(cur.top, `${name} starts below ${prevName}`).toBeGreaterThanOrEqual(prev.bottom - EPS);
+    }
+    expect((await measure(page)).docOverflowX).toBeLessThanOrEqual(1);
+  });
+});
+
+/**
+ * Grid cells never overflow their column: at the 20x20 maximum the frame fits the grid column's
+ * visible width, with the key open or collapsed, three columns or two or stacked.
+ */
+for (const vp of [
+  { width: 1200, height: 900 },
+  { width: 1280, height: 720 },
+  { width: 1440, height: 900 },
+  { width: 1199, height: 900 },
+  { width: 900, height: 800 },
+  { width: 390, height: 844 },
+]) {
+  test(`20x20 grid fits its column at ${vp.width}x${vp.height}, key open and collapsed`, async ({
+    page,
+    request,
+  }) => {
+    await page.setViewportSize(vp);
+    await resetFloor(request, 20, 20);
+    await openApp(page);
+    await expect(page.getByTestId('floor-size')).toHaveAttribute('data-width', '20');
+    for (const open of [true, false]) {
+      if (!open) {
+        await page.getByTestId('legend-summary').click();
+        await expect(page.getByTestId('grid-legend')).not.toHaveAttribute('open', '');
+      }
+      const state = open ? 'open' : 'collapsed';
+      const scroll = await page.locator('app-floor-grid .grid-scroll').evaluate((el) => ({
+        scrollWidth: el.scrollWidth,
+        clientWidth: el.clientWidth,
+      }));
+      expect(scroll.scrollWidth, `grid scrolls sideways (key ${state})`).toBeLessThanOrEqual(
+        scroll.clientWidth + 1,
+      );
+      const frame = await rect(page, 'app-floor-grid .frame');
+      const column = await rect(page, vp.width >= 900 ? '.grid-col' : '.main-col');
+      expect(
+        frame.right,
+        `frame inside its column on the right (key ${state})`,
+      ).toBeLessThanOrEqual(column.right + 1);
+      expect(
+        frame.left,
+        `frame inside its column on the left (key ${state})`,
+      ).toBeGreaterThanOrEqual(column.left - 1);
+      expect((await measure(page)).docOverflowX).toBeLessThanOrEqual(1);
+    }
+    await resetFloor(request);
+  });
+}

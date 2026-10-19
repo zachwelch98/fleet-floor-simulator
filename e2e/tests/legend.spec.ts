@@ -2,8 +2,9 @@ import { expect, test, type Page } from '@playwright/test';
 import { openApp, resetFloor } from './helpers.js';
 
 /**
- * The key under the floor: it highlights the badges that are on the grid right now, and it can be
- * collapsed with the choice remembered across a reload.
+ * The grid key (a column beside the grid from 1200px, DECISIONS 5.9): it highlights the badges that
+ * are on the grid right now, and it can be collapsed (to a slim rail) with the choice remembered
+ * across a reload.
  */
 test.beforeEach(async ({ request }) => {
   await resetFloor(request);
@@ -94,5 +95,43 @@ test.describe('grid key', () => {
     await page.getByTestId('legend-summary').click();
     await expect(page.getByTestId('legend-on-floor')).toBeVisible();
     await expect(page.getByTestId('legend-on-floor')).toHaveText('· CT, BB on the floor');
+  });
+
+  test('collapsed on a wide screen: a slim rail with "Key" and the active codes as stacked pills', async ({
+    page,
+  }) => {
+    await loadBriefC(page);
+    await page.getByTestId('btn-step').click();
+    await expect(page.getByTestId('tick-counter')).toHaveAttribute('data-tick', '1');
+    const rail = page.getByTestId('legend-rail');
+    // Open: the rail is not drawn (the full key shows instead).
+    await expect(rail).toBeHidden();
+
+    await page.getByTestId('legend-summary').click();
+    await expect(page.getByTestId('grid-legend')).not.toHaveAttribute('open', '');
+    await expect(rail).toBeVisible();
+    await expect(rail.locator('.pill')).toHaveCount(2);
+    await expect(rail.locator('[data-rail-code="CT"]')).toBeVisible();
+    await expect(rail.locator('[data-rail-code="BB"]')).toBeVisible();
+    await expect(page.getByTestId('legend-summary')).toContainText('Key');
+    // The pills are stacked: the second is below the first, not beside it.
+    const first = await rail.locator('.pill').nth(0).boundingBox();
+    const second = await rail.locator('.pill').nth(1).boundingBox();
+    expect(second!.y).toBeGreaterThan(first!.y + first!.height - 1);
+    expect(second!.x).toBeCloseTo(first!.x, -1);
+    // The whole key fits the 4.5rem column.
+    const key = await page.getByTestId('grid-legend').boundingBox();
+    expect(key!.width).toBeLessThanOrEqual(72);
+
+    await page.getByTestId('legend-summary').click();
+    await expect(rail).toBeHidden();
+  });
+
+  test('with nothing on the floor the collapsed rail is just "Key"', async ({ page }) => {
+    await openApp(page);
+    await page.getByTestId('legend-summary').click();
+    await expect(page.getByTestId('grid-legend')).not.toHaveAttribute('open', '');
+    await expect(page.getByTestId('legend-summary')).toContainText('Key');
+    await expect(page.getByTestId('legend-rail')).toHaveCount(0);
   });
 });
