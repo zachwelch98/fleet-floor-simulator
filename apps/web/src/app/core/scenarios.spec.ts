@@ -1,6 +1,7 @@
 import { runScenario } from '@fleet/engine';
 import { describe, expect, it } from 'vitest';
-import { SCENARIOS, buildScenario, findScenario } from './scenarios';
+import { tickResult } from '../testing/mocks';
+import { SCENARIOS, buildScenario, findScenario, reportLines } from './scenarios';
 
 const BRIEF_IDS = [
   'brief_a_chain',
@@ -119,5 +120,19 @@ describe('buildScenario', () => {
     expect(() =>
       buildScenario('t', 't', 'curated', 'PLACE R1 0,0,EAST\nTICK\nREPORT\n', 'R1 0,0,EAST\nR2\n'),
     ).toThrow(/.expected file has 2 lines/);
+  });
+});
+
+describe('reportLines', () => {
+  it('prints the end cell and facing of each result, sorted by robot number', () => {
+    const lines = reportLines([
+      tickResult('R10', { outcome: 'MOVED', to: { x: 4, y: 0 }, facing: 'WEST' }),
+      tickResult('R2', { outcome: 'TURNED', to: { x: 1, y: 3 }, facing: 'SOUTH' }),
+    ]);
+    expect(lines).toEqual(['R2 1,3,SOUTH', 'R10 4,0,WEST']);
+  });
+
+  it('prints EMPTY when the tick had no robots', () => {
+    expect(reportLines([])).toEqual(['EMPTY']);
   });
 });

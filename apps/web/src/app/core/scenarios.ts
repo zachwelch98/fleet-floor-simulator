@@ -8,9 +8,10 @@ import {
   apply,
   createFloorState,
   formatReport,
+  parseRobotNum,
   parseScenarioLine,
 } from '@fleet/engine';
-import type { Action, FloorState } from '@fleet/engine';
+import type { Action, FloorState, RobotTickResult } from '@fleet/engine';
 import briefAChain from '../../../../../scenarios/brief_a_chain.txt';
 import briefAChainExpected from '../../../../../scenarios/brief_a_chain.expected';
 import briefBHeadon from '../../../../../scenarios/brief_b_headon.txt';
@@ -221,6 +222,23 @@ export const SCENARIOS: readonly ScenarioDef[] = [
     gotoAroundObstacleExpected,
   ),
 ];
+
+/**
+ * What REPORT would print after a tick, read from that tick's results: each robot's end cell and
+ * facing (`to` + `facing`). The engine sorts results by robot number already; formatReport sorts
+ * again so the lines are right whatever the order.
+ */
+export function reportLines(results: readonly RobotTickResult[]): string[] {
+  return formatReport(
+    results.map((r) => ({
+      id: r.id,
+      num: parseRobotNum(r.id) ?? 0,
+      x: r.to.x,
+      y: r.to.y,
+      facing: r.facing,
+    })),
+  );
+}
 
 export function findScenario(id: string): ScenarioDef | undefined {
   return SCENARIOS.find((s) => s.id === id);
