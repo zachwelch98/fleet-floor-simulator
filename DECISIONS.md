@@ -277,6 +277,16 @@ FIFO as every other command. No new endpoint and no change to the engine or prot
   alone).
 - **Bundling:** the files in `scenarios/` are imported as text through the esbuild `loader` option
   in `apps/web/angular.json`, so the picker and the golden tests share one copy.
+- **Addendum (layout):** the first version put the title and every checkpoint in the sidebar. With
+  a six-checkpoint run the panel grew to 330-420px and pushed Robots and History below the fold,
+  where the sidebar clipped them. Two rulings: (1) the sidebar keeps only the compact picker (heading,
+  select, Load/Reload, the "n / m passed" badge); the title and checkpoints are a "Scenario
+  checkpoints" section (`ui/scenario-results.ts`) under the floor and legend, shown while a run is
+  active, because results belong next to the floor they describe and that column already scrolls.
+  (2) At >= 900px the sidebar is a scroll container, so if the panes ever cannot all fit it scrolls
+  as one column instead of clipping; Robots and History keep their 200px minimums (UI_SPEC 1.1).
+  The sidebar's width and position do not depend on the floor size. `e2e/tests/layout.spec.ts`
+  guards all of this at 1280x720, 1440x900 and 390x844.
 
 ---
 
