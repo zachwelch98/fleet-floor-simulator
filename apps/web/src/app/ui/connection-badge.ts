@@ -31,24 +31,6 @@ const LABEL: Record<ConnectionState, string> = {
     .dot {
       color: var(--color-text-muted);
     }
-    /* Phones: the normal "Connected" state shrinks to the dot (the word stays for screen readers);
-       Reconnecting and Offline keep their words. */
-    @media (max-width: 419px) {
-      .badge {
-        position: relative;
-      }
-      .badge[data-state='connected'] {
-        gap: 0;
-      }
-      .badge[data-state='connected'] .label {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip-path: inset(50%);
-        white-space: nowrap;
-      }
-    }
     [data-state='connected'] .dot {
       color: var(--conn-connected);
     }
