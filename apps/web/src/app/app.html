@@ -71,6 +71,16 @@
     </section>
 
     <aside class="sidebar">
+      <app-scenario-panel
+        [scenarios]="scenarios.scenarios"
+        [selectedId]="scenarios.selectedId()"
+        [loading]="scenarios.loading()"
+        [connected]="store.connected()"
+        [run]="scenarios.run()"
+        (select)="scenarios.select($event)"
+        (load)="scenarios.load()"
+        (reload)="scenarios.reload()"
+      />
       <app-command-pad
         [selectedRobot]="store.selectedRobot()"
         [gotoArmed]="store.gotoArmed()"
