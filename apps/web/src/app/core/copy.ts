@@ -189,36 +189,98 @@ export interface BadgeInfo {
   readonly reached: boolean;
 }
 
-const BLOCK_BADGE: Record<BlockReason, string> = {
-  WALL: 'WL',
-  OBSTACLE: 'OB',
-  CONTESTED: 'CT',
-  HEAD_ON: 'HO',
-  OCCUPIED: 'OC',
-  BEHIND_BLOCKED: 'BB',
-};
+/** One badge as the floor draws it, plus the wording the key shows for it. */
+export interface LegendBadge extends BadgeInfo {
+  /** Short name in the key: "Contested". */
+  readonly label: string;
+  /** One line of what it means, e.g. "a lower-numbered robot won the cell". */
+  readonly detail: string;
+  /** The tick outcome that produces this badge. */
+  readonly outcome: TickOutcome;
+  /** The block reason, for the BLOCKED badges. */
+  readonly reason?: BlockReason;
+}
+
+function entry(
+  text: string,
+  glyph: string,
+  outcome: TickOutcome,
+  label: string,
+  detail: string,
+  extra: { reason?: BlockReason; reached?: boolean } = {},
+): LegendBadge {
+  return {
+    text,
+    glyph,
+    group: outcomeGroup(outcome),
+    reached: extra.reached ?? false,
+    label,
+    detail,
+    outcome,
+    ...(extra.reason ? { reason: extra.reason } : {}),
+  };
+}
+
+/**
+ * Every badge the floor can show, in key order. The grid (`badgeFor`) and the key both read this
+ * table, so they cannot drift apart. The six BLOCKED entries come first (one per block reason).
+ */
+export const LEGEND_BADGES: readonly LegendBadge[] = [
+  entry('WL', '✕', 'BLOCKED', 'Wall', 'the floor edge is ahead', { reason: 'WALL' }),
+  entry('OB', '✕', 'BLOCKED', 'Obstacle', 'an obstacle is ahead', { reason: 'OBSTACLE' }),
+  entry('CT', '✕', 'BLOCKED', 'Contested', 'a lower-numbered robot won the cell', {
+    reason: 'CONTESTED',
+  }),
+  entry('HO', '✕', 'BLOCKED', 'Head-on', "two robots can't swap cells", { reason: 'HEAD_ON' }),
+  entry('OC', '✕', 'BLOCKED', 'Occupied', "a robot ahead didn't move", { reason: 'OCCUPIED' }),
+  entry('BB', '✕', 'BLOCKED', 'Blocked behind', 'the robot ahead was also blocked', {
+    reason: 'BEHIND_BLOCKED',
+  }),
+  entry('WT', '…', 'WAITING', 'Waiting', 'no path to the GOTO target this tick'),
+  entry('UN', '!', 'UNREACHABLE', 'Unreachable', 'no path for 3 ticks, the GOTO was removed'),
+  entry('AR', '◎', 'ARRIVED', 'Arrived', 'already at the GOTO target'),
+  entry('OK', '✓', 'MOVED', 'Reached', 'moved onto the GOTO target', { reached: true }),
+];
+
+/** The badge for an outcome (and block reason), as the key lists it. */
+function legendEntry(outcome: TickOutcome, reason?: BlockReason): LegendBadge | undefined {
+  return LEGEND_BADGES.find((e) => e.outcome === outcome && e.reason === reason);
+}
 
 /** Grid badge for a last-tick result; null for plain MOVED / TURNED / IDLE (no badge). */
 export function badgeFor(result: RobotTickResult): BadgeInfo | null {
-  switch (result.outcome) {
-    case 'BLOCKED':
-      return {
-        text: result.reason ? BLOCK_BADGE[result.reason] : 'BL',
-        glyph: '✕',
-        group: 'blocked',
-        reached: false,
-      };
-    case 'WAITING':
-      return { text: 'WT', glyph: '…', group: 'waiting', reached: false };
-    case 'UNREACHABLE':
-      return { text: 'UN', glyph: '!', group: 'unreachable', reached: false };
-    case 'ARRIVED':
-      return { text: 'AR', glyph: '◎', group: 'arrived', reached: false };
-    case 'MOVED':
-      return result.reachedGoto ? { text: 'OK', glyph: '✓', group: 'moved', reached: true } : null;
-    default:
-      return null;
+  const found =
+    result.outcome === 'MOVED'
+      ? result.reachedGoto
+        ? legendEntry('MOVED')
+        : undefined
+      : legendEntry(result.outcome, result.reason);
+  if (found) {
+    return { text: found.text, glyph: found.glyph, group: found.group, reached: found.reached };
   }
+  // A BLOCKED result without a reason: generic badge, not listed in the key.
+  return result.outcome === 'BLOCKED'
+    ? { text: 'BL', glyph: '✕', group: 'blocked', reached: false }
+    : null;
+}
+
+/**
+ * The badge codes currently on the floor: one per robot that is on the floor and has a badge in
+ * its last-tick result. Drives which key entries are highlighted.
+ */
+export function activeBadgeCodes(
+  robots: readonly Pick<Robot, 'id'>[],
+  lastResults: ReadonlyMap<string, RobotTickResult>,
+): ReadonlySet<string> {
+  const codes = new Set<string>();
+  for (const r of robots) {
+    const result = lastResults.get(r.id);
+    const badge = result ? badgeFor(result) : null;
+    if (badge) {
+      codes.add(badge.text);
+    }
+  }
+  return codes;
 }
 
 const SHORT_REASON: Record<BlockReason, string> = {

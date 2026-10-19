@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { tickResult } from '../testing/mocks';
+import type { BlockReason, RobotTickResult, TickOutcome } from '@fleet/engine';
 import {
+  LEGEND_BADGES,
+  activeBadgeCodes,
   badgeFor,
   cellAriaLabel,
   eventLine,
@@ -109,6 +112,107 @@ describe('badgeFor', () => {
     expect(badgeFor(tickResult('R1', { outcome: 'MOVED' }))).toBeNull();
     expect(badgeFor(tickResult('R1', { outcome: 'TURNED' }))).toBeNull();
     expect(badgeFor(tickResult('R1', { outcome: 'IDLE' }))).toBeNull();
+  });
+});
+
+describe('LEGEND_BADGES', () => {
+  const reasons: BlockReason[] = [
+    'WALL',
+    'OBSTACLE',
+    'CONTESTED',
+    'HEAD_ON',
+    'OCCUPIED',
+    'BEHIND_BLOCKED',
+  ];
+  const sample = (outcome: TickOutcome, reason?: BlockReason, reachedGoto = false) =>
+    tickResult('R1', {
+      outcome,
+      ...(reason ? { reason } : {}),
+      ...(reachedGoto ? { reachedGoto } : {}),
+    });
+  const everyBadgeResult: RobotTickResult[] = [
+    ...reasons.map((r) => sample('BLOCKED', r)),
+    sample('WAITING'),
+    sample('UNREACHABLE'),
+    sample('ARRIVED'),
+    sample('MOVED', undefined, true),
+  ];
+
+  it('lists one entry for every block reason and every other badge-producing outcome', () => {
+    for (const reason of reasons) {
+      const badge = badgeFor(sample('BLOCKED', reason));
+      expect(badge, reason).not.toBeNull();
+      const entry = LEGEND_BADGES.find((e) => e.reason === reason);
+      expect(entry, reason).toBeDefined();
+      expect(entry?.text).toBe(badge?.text);
+    }
+    for (const outcome of ['WAITING', 'UNREACHABLE', 'ARRIVED'] as const) {
+      expect(
+        LEGEND_BADGES.some((e) => e.outcome === outcome),
+        outcome,
+      ).toBe(true);
+    }
+    expect(LEGEND_BADGES.some((e) => e.outcome === 'MOVED' && e.reached)).toBe(true);
+    expect(LEGEND_BADGES.map((e) => e.text)).toEqual([
+      'WL',
+      'OB',
+      'CT',
+      'HO',
+      'OC',
+      'BB',
+      'WT',
+      'UN',
+      'AR',
+      'OK',
+    ]);
+  });
+
+  it('matches what the grid draws for each result: the key and badgeFor cannot drift apart', () => {
+    for (const result of everyBadgeResult) {
+      const badge = badgeFor(result);
+      expect(badge).not.toBeNull();
+      const entry = LEGEND_BADGES.find((e) => e.text === badge?.text);
+      expect(entry).toBeDefined();
+      expect(entry).toMatchObject({
+        text: badge?.text,
+        glyph: badge?.glyph,
+        group: badge?.group,
+        reached: badge?.reached,
+      });
+    }
+  });
+
+  it('has unique codes and non-empty labels and details', () => {
+    expect(new Set(LEGEND_BADGES.map((e) => e.text)).size).toBe(LEGEND_BADGES.length);
+    for (const e of LEGEND_BADGES) {
+      expect(e.label.length).toBeGreaterThan(0);
+      expect(e.detail.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('still gives a BLOCKED result without a reason a generic badge', () => {
+    expect(badgeFor(sample('BLOCKED'))).toMatchObject({ text: 'BL', group: 'blocked' });
+  });
+});
+
+describe('activeBadgeCodes', () => {
+  const last = new Map<string, RobotTickResult>([
+    ['R1', tickResult('R1', { outcome: 'MOVED' })],
+    ['R2', tickResult('R2', { outcome: 'BLOCKED', reason: 'CONTESTED' })],
+    ['R3', tickResult('R3', { outcome: 'BLOCKED', reason: 'BEHIND_BLOCKED' })],
+    ['R4', tickResult('R4', { outcome: 'BLOCKED', reason: 'BEHIND_BLOCKED' })],
+    ['R9', tickResult('R9', { outcome: 'WAITING' })],
+  ]);
+
+  it('collects each badge code once, for robots that are on the floor', () => {
+    const robots = [{ id: 'R1' }, { id: 'R2' }, { id: 'R3' }, { id: 'R4' }];
+    expect([...activeBadgeCodes(robots, last)].sort()).toEqual(['BB', 'CT']);
+  });
+
+  it('is empty when nothing carries a badge, and ignores results of removed robots', () => {
+    expect(activeBadgeCodes([{ id: 'R1' }], last).size).toBe(0);
+    expect(activeBadgeCodes([], last).size).toBe(0);
+    expect(activeBadgeCodes([{ id: 'R1' }], new Map()).size).toBe(0);
   });
 });
 
