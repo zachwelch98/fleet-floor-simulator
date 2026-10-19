@@ -258,6 +258,47 @@ describe('App grid and interactions', () => {
     expect(api.sendAction).not.toHaveBeenCalled();
   });
 
+  it('hands the keyboard back after a grid click: the slider is blurred, so ArrowUp queues MOVE', async () => {
+    const { q, api, el, fixture } = await mount(
+      floorDto({ state: floorState({ robots: [robot('R1', 1, 1)], nextRobotNum: 2 }) }),
+    );
+    document.body.append(el);
+    const slider = q('input-interval') as HTMLInputElement;
+    slider.focus();
+    expect(document.activeElement).toBe(slider);
+    q('cell-1-1')!.click();
+    await settle(fixture);
+    expect(document.activeElement).not.toBe(slider);
+    api.sendAction.mockResolvedValueOnce({
+      kind: 'success',
+      body: { ok: true, floor: floorDto({ version: 2 }), history: [] },
+    });
+    document.activeElement!.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }),
+    );
+    await settle(fixture);
+    expect(api.sendAction).toHaveBeenCalledWith({
+      type: 'QUEUE_COMMANDS',
+      id: 'R1',
+      commands: [{ kind: 'MOVE' }],
+    });
+    el.remove();
+  });
+
+  it('pad GOTO in edit mode turns edit off and arms GOTO', async () => {
+    const { q, store, fixture } = await mount(
+      floorDto({ state: floorState({ robots: [robot('R1', 1, 1)], nextRobotNum: 2 }) }),
+    );
+    store.select('R1');
+    store.setEditMode(true);
+    await settle(fixture);
+    q('btn-goto-mode')!.click();
+    await settle(fixture);
+    expect(q('toggle-edit')?.getAttribute('aria-pressed')).toBe('false');
+    expect(q('btn-goto-mode')?.getAttribute('data-armed')).toBe('true');
+    expect(q('goto-banner')).not.toBeNull();
+  });
+
   it('shows last-tick badges and rejection toasts with their data attributes', async () => {
     const r1 = robot('R1', 1, 1);
     const tick = entry(

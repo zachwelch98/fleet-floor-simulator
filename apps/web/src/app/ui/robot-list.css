@@ -3,11 +3,21 @@
   min-height: 0;
 }
 .robots {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   max-height: 100%;
   overflow: auto;
+  /* The heading is sticky, so it carries the top padding itself. */
+  padding-top: 0;
+}
+.panel-title {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  padding: var(--space-3) 0 var(--space-1);
+  background: var(--color-surface);
 }
 .panel-title:focus-visible {
   outline: var(--focus-ring);
@@ -76,7 +86,9 @@ p {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
-  max-height: 7.5em;
+  /* About three lines of chips; longer queues scroll inside the row. */
+  position: relative;
+  max-height: 5em;
   overflow: auto;
 }
 .chip {
@@ -102,7 +114,39 @@ p {
   content: '🗑';
 }
 @media (min-width: 900px) {
+  /* Compact desktop row: select / (queue + actions) / last tick, about 100px. */
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'select select'
+      'queue actions'
+      'last last';
+    align-items: start;
+    column-gap: var(--space-2);
+  }
   .select {
-    min-height: 40px;
+    grid-area: select;
+    min-height: 36px;
+  }
+  .queue,
+  .queue-empty {
+    grid-area: queue;
+    min-width: 0;
+  }
+  .actions {
+    grid-area: actions;
+    align-self: center;
+  }
+  .last {
+    grid-area: last;
+  }
+  /* Delete shrinks to the trash icon (its aria-label and title carry the name). */
+  .del-text {
+    display: none;
+  }
+  .del {
+    min-width: 32px;
+    padding: 0 var(--space-2);
   }
 }

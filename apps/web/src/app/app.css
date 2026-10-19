@@ -28,6 +28,20 @@
 .conn {
   margin-left: auto;
 }
+@media (max-width: 899px) {
+  /* Two-line phone header: title + connection on the first line, size and tick on the second. */
+  .header h1 {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .conn {
+    order: 2;
+  }
+  .meta {
+    order: 3;
+    flex-basis: 100%;
+  }
+}
 
 .center {
   margin: var(--space-7) auto;
@@ -88,15 +102,16 @@
   .sidebar {
     min-height: 0;
   }
+  /* UI_SPEC 1.1: Robots and History each get at least 200px; Robots takes at most 45%. */
   .robots-wrap {
     flex: 0 1 auto;
-    max-height: 35%;
-    min-height: 0;
+    max-height: 45%;
+    min-height: 200px;
     display: flex;
     flex-direction: column;
   }
   .history-wrap {
     flex: 1;
-    min-height: 0;
+    min-height: 200px;
   }
 }

@@ -17,6 +17,7 @@ import {
   type BadgeInfo,
   type OutcomeGroup,
 } from '../core/copy';
+import { blurTextEntry } from '../core/keys';
 
 export interface GridCellActivation {
   readonly x: number;
@@ -205,6 +206,8 @@ export class FloorGrid {
   }
 
   protected onCell(cell: CellView, event: MouseEvent): void {
+    // Cells swallow mousedown, so focus never leaves the slider by itself (UI_SPEC 5.2).
+    blurTextEntry();
     this.cellActivate.emit({ x: cell.x, y: cell.y, shift: event.shiftKey });
   }
 

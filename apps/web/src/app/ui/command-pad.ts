@@ -90,7 +90,12 @@ import type { Robot } from '@fleet/engine';
     }
     .btn {
       padding: 0 var(--space-2);
-      white-space: nowrap;
+      min-width: 0;
+    }
+    @media (max-width: 359px) {
+      .key {
+        display: none;
+      }
     }
     .key {
       color: var(--color-text-muted);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decideKey, type KeyContext, type KeyInput } from './keys';
+import { blurTextEntry, decideKey, type KeyContext, type KeyInput } from './keys';
 
 const ctx = (over: Partial<KeyContext> = {}): KeyContext => ({
   hasSelection: true,
@@ -47,7 +47,7 @@ describe('decideKey', () => {
     expect(decideKey(key('ArrowUp', { altKey: true }), ctx())).toBeNull();
     expect(decideKey(key('ArrowUp', { defaultPrevented: true }), ctx())).toBeNull();
     expect(decideKey(key('ArrowUp'), ctx({ modalOpen: true }))).toBeNull();
-    for (const type of ['range', 'number', 'text', 'checkbox']) {
+    for (const type of ['range', 'number', 'text']) {
       const input = document.createElement('input');
       input.type = type;
       expect(decideKey(key('ArrowLeft', { target: input }), ctx())).toBeNull();
@@ -60,10 +60,37 @@ describe('decideKey', () => {
     ).toBeNull();
   });
 
+  it('does not treat a focused checkbox as text entry', () => {
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    expect(decideKey(key('ArrowUp', { target: box }), ctx())).toEqual({
+      type: 'command',
+      kind: 'MOVE',
+    });
+  });
+
   it('still acts when a button has focus', () => {
     expect(decideKey(key('ArrowUp', { target: document.createElement('button') }), ctx())).toEqual({
       type: 'command',
       kind: 'MOVE',
     });
+  });
+});
+
+describe('blurTextEntry', () => {
+  it('blurs a focused slider or text input but leaves buttons alone', () => {
+    const slider = document.createElement('input');
+    slider.type = 'range';
+    const button = document.createElement('button');
+    document.body.append(slider, button);
+    slider.focus();
+    expect(document.activeElement).toBe(slider);
+    blurTextEntry();
+    expect(document.activeElement).not.toBe(slider);
+    button.focus();
+    blurTextEntry();
+    expect(document.activeElement).toBe(button);
+    slider.remove();
+    button.remove();
   });
 });

@@ -56,10 +56,10 @@ import { ToastService } from '../store/toast.service';
       bottom: var(--space-4);
     }
     @media (min-width: 900px) {
+      /* Bottom right keeps the connection badge, toolbar and command pad uncovered. */
       .region {
         left: auto;
-        bottom: auto;
-        top: var(--space-4);
+        bottom: var(--space-4);
         right: var(--space-4);
         width: 380px;
       }

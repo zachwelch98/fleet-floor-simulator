@@ -26,9 +26,9 @@ import { MAX_TICK_INTERVAL_MS, MIN_TICK_INTERVAL_MS } from '@fleet/protocol';
       >
         {{ playing() ? 'Pause' : 'Play' }}
       </button>
-      @if (playing()) {
-        <span class="playing muted">Playing every {{ intervalMs() }} ms</span>
-      }
+      <span class="playing muted" [style.visibility]="playing() ? 'visible' : 'hidden'"
+        >Playing every {{ intervalMs() }} ms</span
+      >
     </div>
 
     <label class="interval">
@@ -84,6 +84,15 @@ import { MAX_TICK_INTERVAL_MS, MIN_TICK_INTERVAL_MS } from '@fleet/protocol';
       align-items: center;
       gap: var(--space-2) var(--space-3);
     }
+    /* Always laid out (hidden when paused) so Play never shifts the slider and buttons beside it. */
+    .playing {
+      min-width: 22ch;
+      font-variant-numeric: tabular-nums;
+    }
+    .play {
+      /* "Pause" is wider than "Play": keep the button the same size in both states. */
+      min-width: 7.5rem;
+    }
     .play::before {
       content: '▶';
     }
@@ -125,6 +134,10 @@ import { MAX_TICK_INTERVAL_MS, MIN_TICK_INTERVAL_MS } from '@fleet/protocol';
       background: var(--color-edit-bg);
     }
     @media (max-width: 899px) {
+      /* Phones: the Pause label and the slider value already say it; no text to reflow. */
+      .playing {
+        display: none;
+      }
       .group:first-child .btn:not(:last-child) {
         flex: 1;
       }
