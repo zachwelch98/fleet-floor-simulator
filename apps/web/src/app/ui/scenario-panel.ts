@@ -1,19 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import type { ScenarioDef } from '../core/scenarios';
-import type { CheckpointStatus, RunView } from '../store/scenario.store';
-
-const BADGE: Record<CheckpointStatus, string> = { pending: '…', pass: '✓', fail: '✗' };
-const WORD: Record<CheckpointStatus, string> = {
-  pending: 'Pending',
-  pass: 'Passed',
-  fail: 'Failed',
-};
-/** Reuses the outcome colors (styles.css [data-group]): pass = moved, fail = blocked, pending = idle. */
-const GROUP: Record<CheckpointStatus, string> = { pending: 'idle', pass: 'moved', fail: 'blocked' };
+import type { RunView } from '../store/scenario.store';
 
 /**
  * Scenario picker (docs/design/UI_SPEC.md, sidebar top): choose a scenario, Load it onto the shared
- * floor, then Play or Step and watch each REPORT's expected lines turn into a pass or a fail.
+ * floor, then Play or Step. Kept compact (heading, select, Load/Reload, one-line summary) so it never
+ * crowds Robots and History; the checkpoints are in ScenarioResults, under the floor (DECISIONS 5.7).
  * Presentational: ScenarioStore holds the state.
  */
 @Component({
@@ -70,9 +62,6 @@ const GROUP: Record<CheckpointStatus, string> = { pending: 'idle', pass: 'moved'
     </div>
 
     @if (run(); as r) {
-      <p class="title" data-testid="scenario-title" [attr.data-scenario]="r.active.def.id">
-        {{ r.active.def.title }}
-      </p>
       <p
         class="summary"
         role="status"
@@ -81,46 +70,6 @@ const GROUP: Record<CheckpointStatus, string> = { pending: 'idle', pass: 'moved'
       >
         {{ r.passed }} / {{ r.checkpoints.length }} passed
       </p>
-      @if (r.modified) {
-        <p class="note" data-testid="scenario-modified">
-          The floor was edited after loading, so results may not match.
-        </p>
-      } @else if (r.passed === 0 && !r.complete && r.checkpoints[0]?.status === 'pending') {
-        <p class="note muted" data-testid="scenario-hint">Press Play or Step.</p>
-      }
-      <ol class="checkpoints">
-        @for (c of r.checkpoints; track c.index) {
-          <li
-            class="checkpoint"
-            [attr.data-testid]="'checkpoint-' + c.index"
-            [attr.data-status]="c.status"
-            [attr.data-group]="group(c.status)"
-          >
-            <span class="badge"
-              ><span aria-hidden="true">{{ badge(c.status) }}</span>
-              <span class="visually-hidden">{{ word(c.status) }}</span></span
-            >
-            <div class="body">
-              <p class="after">After tick {{ c.afterTicks }}</p>
-              <pre class="lines" data-testid="checkpoint-expected">{{
-                c.expected.join(
-                  '
-'
-                )
-              }}</pre>
-              @if (c.status === 'fail' && c.actual) {
-                <p class="after">Actual</p>
-                <pre class="lines actual" data-testid="checkpoint-actual">{{
-                  c.actual.join(
-                    '
-'
-                  )
-                }}</pre>
-              }
-            </div>
-          </li>
-        }
-      </ol>
     }
   </section>`,
   styles: `
@@ -132,8 +81,7 @@ const GROUP: Record<CheckpointStatus, string> = { pending: 'idle', pass: 'moved'
       flex-direction: column;
       gap: var(--space-2);
     }
-    p,
-    pre {
+    p {
       margin: 0;
     }
     .pick {
@@ -155,9 +103,6 @@ const GROUP: Record<CheckpointStatus, string> = { pending: 'idle', pass: 'moved'
     .select:disabled {
       opacity: 0.5;
     }
-    .title {
-      font-weight: 700;
-    }
     .summary {
       align-self: flex-start;
       padding: var(--space-1) var(--space-3);
@@ -176,50 +121,6 @@ const GROUP: Record<CheckpointStatus, string> = { pending: 'idle', pass: 'moved'
       color: var(--outcome-blocked-fg);
       background: var(--outcome-blocked-bg);
       border-color: var(--outcome-blocked-line);
-    }
-    .note {
-      font-size: var(--text-sm);
-    }
-    .checkpoints {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-2);
-      /* A long scenario (six checkpoints) scrolls here instead of squeezing Robots and History. */
-      max-height: 14rem;
-      overflow: auto;
-    }
-    .checkpoint {
-      display: flex;
-      gap: var(--space-2);
-      padding: var(--space-2);
-      border: 1px solid var(--o-line);
-      border-radius: var(--radius-1);
-      background: var(--o-bg);
-      color: var(--o-fg);
-    }
-    .badge {
-      flex: none;
-      width: 1.5rem;
-      font-weight: 700;
-      text-align: center;
-    }
-    .body {
-      min-width: 0;
-    }
-    .after {
-      font-size: var(--text-xs);
-      font-weight: 600;
-    }
-    .lines {
-      font-family: var(--font-mono);
-      font-size: var(--text-sm);
-      white-space: pre-wrap;
-    }
-    .actual {
-      font-weight: 700;
     }
   `,
 })
@@ -248,16 +149,6 @@ export class ScenarioPanel {
     }
     return r.complete ? 'passed' : 'pending';
   });
-
-  protected badge(status: CheckpointStatus): string {
-    return BADGE[status];
-  }
-  protected word(status: CheckpointStatus): string {
-    return WORD[status];
-  }
-  protected group(status: CheckpointStatus): string {
-    return GROUP[status];
-  }
 
   protected pick(event: Event): void {
     this.select.emit((event.target as HTMLSelectElement).value);

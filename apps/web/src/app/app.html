@@ -68,6 +68,9 @@
         [disabled]="!store.connected()"
         (cellActivate)="store.activateCell($event)"
       />
+      @if (scenarios.run(); as run) {
+      <app-scenario-results [run]="run" />
+      }
     </section>
 
     <aside class="sidebar">

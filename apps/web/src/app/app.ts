@@ -10,6 +10,7 @@ import { HistoryLog } from './ui/history-log';
 import { NewFloorDialog } from './ui/new-floor-dialog';
 import { RobotList } from './ui/robot-list';
 import { ScenarioPanel } from './ui/scenario-panel';
+import { ScenarioResults } from './ui/scenario-results';
 import { Toasts } from './ui/toasts';
 
 /** App shell (UI_SPEC 3.1): header, loading/error/ready states, global keys, live region. */
@@ -25,6 +26,7 @@ import { Toasts } from './ui/toasts';
     NewFloorDialog,
     RobotList,
     ScenarioPanel,
+    ScenarioResults,
     Toasts,
   ],
   host: { '(document:keydown)': 'onKeydown($event)' },
