@@ -25,7 +25,8 @@
               }
             ],
             "styles": ["src/styles.css"],
-            "allowedCommonJsDependencies": ["@fleet/protocol", "@fleet/engine"]
+            "allowedCommonJsDependencies": ["@fleet/protocol", "@fleet/engine"],
+            "loader": { ".txt": "text", ".expected": "text" }
           },
           "configurations": {
             "production": {
