@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import type { FloorState, Robot, RobotId, RobotTickResult } from '@fleet/engine';
 import {
+  activeBadgeCodes,
   badgeFor,
   cellAriaLabel,
   hueOf,
@@ -18,6 +19,7 @@ import {
   type OutcomeGroup,
 } from '../core/copy';
 import { blurTextEntry } from '../core/keys';
+import { GridLegend } from './grid-legend';
 
 export interface GridCellActivation {
   readonly x: number;
@@ -71,6 +73,7 @@ const ROTATION = { NORTH: 0, EAST: 90, SOUTH: 180, WEST: 270 } as const;
 @Component({
   selector: 'app-floor-grid',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [GridLegend],
   templateUrl: './floor-grid.html',
   styleUrl: './floor-grid.css',
 })
@@ -91,6 +94,11 @@ export class FloorGrid {
 
   protected readonly empty = computed(
     () => this.state().robots.length === 0 && this.state().obstacles.length === 0,
+  );
+
+  /** Badge codes on the floor now (from the robots that are here), for the key's highlight. */
+  protected readonly activeBadges = computed(() =>
+    activeBadgeCodes(this.state().robots, this.lastResults()),
   );
 
   protected readonly xLabels = computed(() =>

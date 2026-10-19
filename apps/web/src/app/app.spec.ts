@@ -325,6 +325,10 @@ describe('App grid and interactions', () => {
     expect(badge.getAttribute('data-outcome')).toBe('BLOCKED');
     expect(badge.getAttribute('data-reason')).toBe('WALL');
     expect(badge.textContent).toContain('WL');
+    // The key lights up the badge that is on the floor, and nothing else.
+    expect(q('legend-WL')?.getAttribute('data-active')).toBe('true');
+    expect(q('legend-CT')?.getAttribute('data-active')).toBe('false');
+    expect(q('legend-on-floor')?.textContent).toContain('WL on the floor');
     expect(q('last-result-R1')?.getAttribute('data-reason')).toBe('WALL');
     expect(q('history-tick-1')?.getAttribute('data-seq')).toBe('2');
     expect(q('history-tick-toggle-1')?.textContent).toContain('Tick 1 - 1 blocked');

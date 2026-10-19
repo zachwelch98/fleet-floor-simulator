@@ -78,7 +78,7 @@
           </div>
           } @if (c.badge; as b) {
           <span
-            class="badge"
+            class="badge pill"
             [attr.data-testid]="'badge-' + b.id"
             [attr.data-outcome]="b.outcome"
             [attr.data-reason]="b.reason"
@@ -117,11 +117,9 @@
   <p class="hint muted" data-testid="grid-hint">
     Click a cell to place a robot. Turn on Edit obstacles to draw walls.
   </p>
-  } @else {
-  <p class="legend muted" data-testid="grid-legend">
-    ▲ robot (arrow = facing) · hatched = obstacle · ring = GOTO target (solid = heading there,
-    dashed = queued) · badge = last tick: WL wall, OB obstacle, CT contested, HO head-on, OC
-    occupied, BB blocked behind, WT waiting, UN unreachable, AR arrived, OK reached GOTO.
-  </p>
   }
 </div>
+
+@if (!empty()) {
+<app-grid-legend [active]="activeBadges()" />
+}

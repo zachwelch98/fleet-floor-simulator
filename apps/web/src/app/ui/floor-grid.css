@@ -12,7 +12,15 @@
     --grid-chrome-x: calc(
       var(--sidebar-w) + var(--space-5) + 2 * var(--space-4) + var(--axis-size) + var(--title-size)
     );
-    /* tokens.css estimate + axis title row + the legend's second line. */
+    /* tokens.css estimate + axis title row. The key lives below the grid now, so it reserves
+       nothing here (the column scrolls). The status line only holds one banner line. */
+    --grid-chrome-y: calc(196px + var(--title-size));
+  }
+}
+
+@media (min-width: 900px) and (max-width: 1199.98px) {
+  :host {
+    /* Next to the 360px sidebar a banner can wrap to two lines: reserve the second one. */
     --grid-chrome-y: calc(196px + var(--title-size) + 20px);
   }
 }
@@ -222,22 +230,12 @@
   top: -3px;
   right: -3px;
   z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  gap: 1px;
-  padding: 0 3px;
-  border: 1px solid var(--o-line);
-  border-radius: var(--radius-pill);
-  background: var(--o-bg);
-  color: var(--o-fg);
-  font-size: 9px;
-  font-weight: 700;
-  line-height: 12px;
   pointer-events: auto;
 }
+/* The pill look (colors, radius, glyph + text) is the global .pill class, shared with the key. */
 @container (max-width: 29.99px) {
   .badge {
-    font-size: 7px;
+    --pill-size: 7px;
     letter-spacing: -0.02em;
   }
 }
@@ -281,8 +279,9 @@
   border: 1px solid var(--color-focus);
 }
 
-@media (min-width: 900px) {
-  /* The legend wraps to two lines next to a 360px sidebar; reserve both so nothing shifts. */
+@media (min-width: 900px) and (max-width: 1199.98px) {
+  /* A banner wraps to two lines next to the 360px sidebar here; reserve both so the key below
+     never shifts when a banner appears. From 1200px it fits on one line. */
   .status-line {
     min-height: 48px;
   }
